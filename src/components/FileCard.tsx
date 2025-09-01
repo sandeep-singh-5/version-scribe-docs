@@ -1,16 +1,18 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Edit, Eye, Download } from "lucide-react";
+import { FileText, Edit, Eye, Download, History } from "lucide-react";
 
 interface FileCardProps {
   name: string;
   version: string;
   lastModified: string;
   fileType: string;
+  versionCount?: number;
   onView: () => void;
   onEdit: () => void;
   onDownload: () => void;
+  onViewHistory: () => void;
 }
 
 const FileCard = ({ 
@@ -18,9 +20,11 @@ const FileCard = ({
   version, 
   lastModified, 
   fileType, 
+  versionCount = 1,
   onView, 
   onEdit, 
-  onDownload 
+  onDownload,
+  onViewHistory 
 }: FileCardProps) => {
   return (
     <Card className="group cursor-pointer transition-all duration-200 hover:shadow-file-card-hover hover:-translate-y-1 bg-card border-border shadow-file-card">
@@ -37,9 +41,16 @@ const FileCard = ({
               <p className="text-sm text-muted-foreground">{fileType}</p>
             </div>
           </div>
-          <Badge variant="secondary" className="bg-primary/20 text-primary-foreground hover:bg-primary/30">
-            {version}
-          </Badge>
+          <div className="flex flex-col items-end space-y-1">
+            <Badge variant="secondary" className="bg-primary/20 text-primary-foreground hover:bg-primary/30">
+              {version}
+            </Badge>
+            {versionCount > 1 && (
+              <span className="text-xs text-muted-foreground">
+                {versionCount} versions
+              </span>
+            )}
+          </div>
         </div>
         
         <div className="mb-4">
@@ -48,7 +59,7 @@ const FileCard = ({
           </p>
         </div>
         
-        <div className="flex space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+        <div className="flex flex-wrap gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
           <Button 
             variant="ghost" 
             size="sm" 
@@ -56,7 +67,7 @@ const FileCard = ({
               e.stopPropagation();
               onView();
             }}
-            className="text-primary-foreground hover:bg-primary/20"
+            className="text-primary hover:bg-primary/20"
           >
             <Eye className="h-4 w-4 mr-1" />
             View
@@ -68,11 +79,25 @@ const FileCard = ({
               e.stopPropagation();
               onEdit();
             }}
-            className="text-primary-foreground hover:bg-primary/20"
+            className="text-primary hover:bg-primary/20"
           >
             <Edit className="h-4 w-4 mr-1" />
             Edit
           </Button>
+          {versionCount > 1 && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={(e) => {
+                e.stopPropagation();
+                onViewHistory();
+              }}
+              className="text-primary hover:bg-primary/20"
+            >
+              <History className="h-4 w-4 mr-1" />
+              History
+            </Button>
+          )}
           <Button 
             variant="ghost" 
             size="sm" 
@@ -80,7 +105,7 @@ const FileCard = ({
               e.stopPropagation();
               onDownload();
             }}
-            className="text-primary-foreground hover:bg-primary/20"
+            className="text-primary hover:bg-primary/20"
           >
             <Download className="h-4 w-4 mr-1" />
             Download

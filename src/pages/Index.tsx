@@ -1,42 +1,69 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Search, Filter, Grid, List } from "lucide-react";
 import FileCard from "@/components/FileCard";
 import SearchResults from "@/components/SearchResults";
 import CreateFileDialog from "@/components/CreateFileDialog";
 import FileViewer from "@/components/FileViewer";
+import VersionHistory from "@/components/VersionHistory";
 import { useToast } from "@/hooks/use-toast";
 
-// Mock data for demonstration
-const mockFiles = [
+// Mock data for demonstration - organized by file groups with multiple versions
+const mockFileGroups = [
   {
     id: "1",
     name: "Project Proposal",
-    version: "v2.1",
+    currentVersion: "v2.1",
     lastModified: "2024-01-15 14:30",
     fileType: "docx",
+    versionCount: 3,
+    versions: [
+      { version: "v2.1", lastModified: "2024-01-15 14:30", modifiedBy: "John Doe", size: "2.4 MB", changes: "Updated budget section" },
+      { version: "v2.0", lastModified: "2024-01-12 10:15", modifiedBy: "Jane Smith", size: "2.3 MB", changes: "Major revision with new timeline" },
+      { version: "v1.0", lastModified: "2024-01-08 16:20", modifiedBy: "John Doe", size: "1.8 MB", changes: "Initial version" },
+    ]
   },
   {
     id: "2", 
     name: "Budget Analysis",
-    version: "v1.3",
+    currentVersion: "v1.3",
     lastModified: "2024-01-14 09:15",
     fileType: "xlsx",
+    versionCount: 4,
+    versions: [
+      { version: "v1.3", lastModified: "2024-01-14 09:15", modifiedBy: "Alice Johnson", size: "1.2 MB", changes: "Q4 projections updated" },
+      { version: "v1.2", lastModified: "2024-01-11 14:30", modifiedBy: "Bob Wilson", size: "1.1 MB", changes: "Fixed calculation errors" },
+      { version: "v1.1", lastModified: "2024-01-09 11:45", modifiedBy: "Alice Johnson", size: "1.0 MB", changes: "Added quarterly breakdown" },
+      { version: "v1.0", lastModified: "2024-01-05 13:20", modifiedBy: "Alice Johnson", size: "950 KB", changes: "Initial budget analysis" },
+    ]
   },
   {
     id: "3",
     name: "Marketing Strategy",
-    version: "v1.0",
+    currentVersion: "v1.0",
     lastModified: "2024-01-13 16:45",
     fileType: "pptx",
+    versionCount: 1,
+    versions: [
+      { version: "v1.0", lastModified: "2024-01-13 16:45", modifiedBy: "Sarah Connor", size: "5.2 MB", changes: "Initial presentation" },
+    ]
   },
   {
     id: "4",
     name: "Technical Documentation",
-    version: "v3.0",
+    currentVersion: "v3.0",
     lastModified: "2024-01-12 11:20",
     fileType: "docx",
+    versionCount: 5,
+    versions: [
+      { version: "v3.0", lastModified: "2024-01-12 11:20", modifiedBy: "Mike Chen", size: "3.8 MB", changes: "Complete API documentation rewrite" },
+      { version: "v2.2", lastModified: "2024-01-10 15:30", modifiedBy: "Mike Chen", size: "3.2 MB", changes: "Added new endpoints" },
+      { version: "v2.1", lastModified: "2024-01-08 09:45", modifiedBy: "Lisa Park", size: "3.0 MB", changes: "Security updates" },
+      { version: "v2.0", lastModified: "2024-01-05 14:10", modifiedBy: "Mike Chen", size: "2.8 MB", changes: "Major restructure" },
+      { version: "v1.0", lastModified: "2024-01-01 10:00", modifiedBy: "Mike Chen", size: "2.1 MB", changes: "Initial documentation" },
+    ]
   },
 ];
 
@@ -64,7 +91,8 @@ const Index = () => {
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [selectedFile, setSelectedFile] = useState<any>(null);
-  const [files, setFiles] = useState(mockFiles);
+  const [selectedFileHistory, setSelectedFileHistory] = useState<any>(null);
+  const [files, setFiles] = useState(mockFileGroups);
   const { toast } = useToast();
 
   const handleSearch = async () => {
@@ -85,9 +113,13 @@ const Index = () => {
     const newFile = {
       id: `file-${Date.now()}`,
       name: filename,
-      version: "v1.0",
+      currentVersion: "v1.0",
       lastModified: new Date().toLocaleString(),
       fileType,
+      versionCount: 1,
+      versions: [
+        { version: "v1.0", lastModified: new Date().toLocaleString(), modifiedBy: "You", size: "New", changes: "Initial creation" }
+      ]
     };
     setFiles([newFile, ...files]);
   };
@@ -110,6 +142,27 @@ const Index = () => {
     toast({
       title: "Download Started",
       description: "File download has been initiated",
+    });
+  };
+
+  const handleViewHistory = (fileId: string) => {
+    const file = files.find(f => f.id === fileId);
+    if (file) {
+      setSelectedFileHistory(file);
+    }
+  };
+
+  const handleVersionView = (version: string) => {
+    toast({
+      title: "Opening Version",
+      description: `Opening ${selectedFileHistory?.name} ${version}`,
+    });
+  };
+
+  const handleVersionDownload = (version: string) => {
+    toast({
+      title: "Download Started", 
+      description: `Downloading ${selectedFileHistory?.name} ${version}`,
     });
   };
 
@@ -218,12 +271,14 @@ const Index = () => {
               <FileCard
                 key={file.id}
                 name={file.name}
-                version={file.version}
+                version={file.currentVersion}
                 lastModified={file.lastModified}
                 fileType={file.fileType}
+                versionCount={file.versionCount}
                 onView={() => handleFileView(file.id)}
                 onEdit={() => handleFileEdit(file.id)}
                 onDownload={() => handleFileDownload(file.id)}
+                onViewHistory={() => handleViewHistory(file.id)}
               />
             ))}
           </div>
@@ -250,11 +305,28 @@ const Index = () => {
           isOpen={!!selectedFile}
           onClose={() => setSelectedFile(null)}
           filename={selectedFile.name}
-          version={selectedFile.version}
+          version={selectedFile.currentVersion}
           fileType={selectedFile.fileType}
           onEdit={() => handleFileEdit(selectedFile.id)}
           onDownload={() => handleFileDownload(selectedFile.id)}
         />
+      )}
+
+      {/* Version History Dialog */}
+      {selectedFileHistory && (
+        <Dialog open={!!selectedFileHistory} onOpenChange={() => setSelectedFileHistory(null)}>
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-card border-border">
+            <DialogHeader>
+              <DialogTitle className="text-card-foreground">Version History</DialogTitle>
+            </DialogHeader>
+            <VersionHistory
+              filename={selectedFileHistory.name}
+              versions={selectedFileHistory.versions}
+              onVersionView={handleVersionView}
+              onVersionDownload={handleVersionDownload}
+            />
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );
