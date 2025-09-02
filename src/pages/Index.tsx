@@ -6,10 +6,8 @@ import { Search, Filter, Grid, List } from "lucide-react";
 import FileIndex from "@/components/FileIndex";
 import SearchResults from "@/components/SearchResults";
 import CreateFileDialog from "@/components/CreateFileDialog";
-import FileViewer from "@/components/FileViewer";
 import VersionHistory from "@/components/VersionHistory";
 import { useToast } from "@/hooks/use-toast";
-import OnlyOfficeViewer from "@/components/OnlyOfficeViewer";
 
 // Mock data for demonstration - organized by file groups with multiple versions
 const mockFileGroups = [
@@ -109,7 +107,6 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [selectedFile, setSelectedFile] = useState<any>(null);
   const [selectedFileHistory, setSelectedFileHistory] = useState<any>(null);
   const [files, setFiles] = useState(mockFileGroups);
   const { toast } = useToast();
@@ -143,22 +140,30 @@ const Index = () => {
     setFiles([newFile, ...files]);
   };
 
-  const handleFileView = (fileId: string) => {
+  const handleFileView = (fileId: string, version?: string) => {
     const file = files.find(f => f.id === fileId);
     if (file) {
-      setSelectedFile(file);
+      const viewVersion = version || file.currentVersion;
+      window.open(`/file/${fileId}/${viewVersion}`, '_blank');
+      toast({
+        title: "File Opened",
+        description: `Opening ${file.name} ${viewVersion} in new tab`,
+      });
     }
   };
 
   const handleFileEdit = (fileId: string, version?: string) => {
-    // Simulate editing process - in real app, this would open OnlyOffice editor
     const fileIndex = files.findIndex(f => f.id === fileId);
     if (fileIndex === -1) return;
 
     const file = files[fileIndex];
-    const currentVersion = file.currentVersion;
+    const editVersion = version || file.currentVersion;
+    
+    // Open file in edit mode in new tab
+    window.open(`/file/${fileId}/${editVersion}?mode=edit`, '_blank');
     
     // Calculate next version number
+    const currentVersion = file.currentVersion;
     const versionParts = currentVersion.replace('v', '').split('.');
     const major = parseInt(versionParts[0]);
     const minor = parseInt(versionParts[1]);
@@ -170,13 +175,13 @@ const Index = () => {
       newVersion = `v${major}.${minor + 1}`;
     }
     
-    // Create new version entry
+    // Create new version entry (this will be created when the file is saved)
     const newVersionEntry = {
       version: newVersion,
       lastModified: new Date().toLocaleString(),
       modifiedBy: "You",
       size: "Updated",
-      changes: `Edited from ${version || currentVersion}`
+      changes: `Edited from ${editVersion}`
     };
     
     // Update file with new version
@@ -193,8 +198,8 @@ const Index = () => {
     setFiles(updatedFiles);
     
     toast({
-      title: "Document Edited",
-      description: `Created new version ${newVersion} of "${file.name}"`,
+      title: "File Opened for Editing",
+      description: `Opening ${file.name} in new tab. New version ${newVersion} will be created on save.`,
     });
   };
 
@@ -213,10 +218,13 @@ const Index = () => {
   };
 
   const handleVersionView = (version: string) => {
-    toast({
-      title: "Opening Version",
-      description: `Opening ${selectedFileHistory?.name} ${version}`,
-    });
+    if (selectedFileHistory) {
+      window.open(`/file/${selectedFileHistory.id}/${version}`, '_blank');
+      toast({
+        title: "Version Opened",
+        description: `Opening ${selectedFileHistory.name} ${version} in new tab`,
+      });
+    }
   };
 
   const handleVersionDownload = (version: string) => {
@@ -346,20 +354,6 @@ const Index = () => {
         )}
       </main>
 
-      {/* File Viewer Dialog */}
-      {selectedFile && (
-        // <FileViewer
-        //   isOpen={!!selectedFile}
-        //   onClose={() => setSelectedFile(null)}
-        //   filename={selectedFile.name}
-        //   version={selectedFile.currentVersion}
-        //   fileType={selectedFile.fileType}
-        //   onEdit={() => handleFileEdit(selectedFile.id)}
-        //   onDownload={() => handleFileDownload(selectedFile.id)}
-        // />
-        <OnlyOfficeViewer fileUrl="acd" />
-  
-      )}
 
       {/* Version History Dialog */}
       {selectedFileHistory && (
