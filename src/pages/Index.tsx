@@ -72,17 +72,35 @@ const mockSearchResults = [
     id: "sr1",
     filename: "Project Proposal",
     version: "v2.1",
-    snippet: "This document outlines the comprehensive project proposal for the upcoming quarter including budget allocations and timeline",
+    snippet: "quarterly budget allocations and comprehensive implementation timeline",
+    fullContent: [
+      "Executive Summary: This document outlines the comprehensive project proposal for Q2 2024.",
+      "The project aims to enhance our document management system with advanced version control.",
+      "Key objectives include implementing OnlyOffice integration and improving user experience.",
+      "Budget allocation: $150,000 distributed across development, testing, and deployment phases."
+    ],
     fileType: "docx",
     relevanceScore: 0.95,
+    createdBy: "John Doe",
+    lastModified: "2024-01-15 14:30",
+    size: "2.4 MB",
   },
   {
     id: "sr2",
     filename: "Budget Analysis",
     version: "v1.3", 
-    snippet: "Financial projections and cost analysis for the project implementation phase with detailed breakdowns",
+    snippet: "Q4 financial projections and detailed cost analysis for implementation phase",
+    fullContent: [
+      "Q4 Financial Analysis Report: Comprehensive review of project expenditures and forecasts.",
+      "Total project cost estimate: $285,000 including infrastructure and personnel costs.",
+      "ROI projection shows 150% return within 18 months of full implementation.",
+      "Risk assessment indicates low financial risk with high confidence in timeline adherence."
+    ],
     fileType: "xlsx",
     relevanceScore: 0.87,
+    createdBy: "Alice Johnson",
+    lastModified: "2024-01-14 09:15",
+    size: "1.2 MB",
   },
 ];
 
