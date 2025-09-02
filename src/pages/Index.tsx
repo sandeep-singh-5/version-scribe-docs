@@ -131,10 +131,51 @@ const Index = () => {
     }
   };
 
-  const handleFileEdit = (fileId: string) => {
+  const handleFileEdit = (fileId: string, version?: string) => {
+    // Simulate editing process - in real app, this would open OnlyOffice editor
+    const fileIndex = files.findIndex(f => f.id === fileId);
+    if (fileIndex === -1) return;
+
+    const file = files[fileIndex];
+    const currentVersion = file.currentVersion;
+    
+    // Calculate next version number
+    const versionParts = currentVersion.replace('v', '').split('.');
+    const major = parseInt(versionParts[0]);
+    const minor = parseInt(versionParts[1]);
+    
+    let newVersion: string;
+    if (minor >= 9) {
+      newVersion = `v${major + 1}.0`;
+    } else {
+      newVersion = `v${major}.${minor + 1}`;
+    }
+    
+    // Create new version entry
+    const newVersionEntry = {
+      version: newVersion,
+      lastModified: new Date().toLocaleString(),
+      modifiedBy: "You",
+      size: "Updated",
+      changes: `Edited from ${version || currentVersion}`
+    };
+    
+    // Update file with new version
+    const updatedFile = {
+      ...file,
+      currentVersion: newVersion,
+      lastModified: new Date().toLocaleString(),
+      versionCount: file.versionCount + 1,
+      versions: [newVersionEntry, ...file.versions]
+    };
+    
+    const updatedFiles = [...files];
+    updatedFiles[fileIndex] = updatedFile;
+    setFiles(updatedFiles);
+    
     toast({
-      title: "Opening Editor",
-      description: "OnlyOffice editor would open here for document editing",
+      title: "Document Edited",
+      description: `Created new version ${newVersion} of "${file.name}"`,
     });
   };
 
