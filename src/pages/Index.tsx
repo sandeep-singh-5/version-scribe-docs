@@ -9,6 +9,7 @@ import CreateFileDialog from "@/components/CreateFileDialog";
 import FileViewer from "@/components/FileViewer";
 import VersionHistory from "@/components/VersionHistory";
 import { useToast } from "@/hooks/use-toast";
+import OnlyOfficeViewer from "@/components/OnlyOfficeViewer";
 
 // Mock data for demonstration - organized by file groups with multiple versions
 const mockFileGroups = [
@@ -347,15 +348,17 @@ const Index = () => {
 
       {/* File Viewer Dialog */}
       {selectedFile && (
-        <FileViewer
-          isOpen={!!selectedFile}
-          onClose={() => setSelectedFile(null)}
-          filename={selectedFile.name}
-          version={selectedFile.currentVersion}
-          fileType={selectedFile.fileType}
-          onEdit={() => handleFileEdit(selectedFile.id)}
-          onDownload={() => handleFileDownload(selectedFile.id)}
-        />
+        // <FileViewer
+        //   isOpen={!!selectedFile}
+        //   onClose={() => setSelectedFile(null)}
+        //   filename={selectedFile.name}
+        //   version={selectedFile.currentVersion}
+        //   fileType={selectedFile.fileType}
+        //   onEdit={() => handleFileEdit(selectedFile.id)}
+        //   onDownload={() => handleFileDownload(selectedFile.id)}
+        // />
+        <OnlyOfficeViewer fileUrl="acd" />
+  
       )}
 
       {/* Version History Dialog */}
