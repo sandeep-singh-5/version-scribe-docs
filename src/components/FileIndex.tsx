@@ -1,0 +1,160 @@
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Eye, Edit, Download, History } from "lucide-react";
+
+interface Version {
+  version: string;
+  lastModified: string;
+  modifiedBy: string;
+  size: string;
+  changes: string;
+}
+
+interface FileGroup {
+  id: string;
+  name: string;
+  currentVersion: string;
+  lastModified: string;
+  fileType: string;
+  versionCount: number;
+  versions: Version[];
+}
+
+interface FileIndexProps {
+  files: FileGroup[];
+  onFileView: (fileId: string, version?: string) => void;
+  onFileEdit: (fileId: string, version?: string) => void;
+  onFileDownload: (fileId: string, version?: string) => void;
+  onViewHistory: (fileId: string) => void;
+}
+
+const FileIndex = ({ files, onFileView, onFileEdit, onFileDownload, onViewHistory }: FileIndexProps) => {
+  const getFileIcon = (fileType: string) => {
+    switch (fileType.toLowerCase()) {
+      case 'docx':
+        return '📄';
+      case 'xlsx':
+        return '📊';
+      case 'pptx':
+        return '📺';
+      default:
+        return '📁';
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      {files.map((file) => (
+        <Card key={file.id} className="p-6 bg-card border-border">
+          <div className="flex items-start justify-between">
+            {/* File Title Section */}
+            <div className="flex-1 min-w-0 pr-8">
+              <div className="flex items-center space-x-3 mb-2">
+                <span className="text-2xl">{getFileIcon(file.fileType)}</span>
+                <div>
+                  <h3 className="text-lg font-semibold text-card-foreground truncate">
+                    {file.name}
+                  </h3>
+                  <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+                    <Badge variant="secondary" className="text-xs">
+                      {file.fileType.toUpperCase()}
+                    </Badge>
+                    <span>•</span>
+                    <span>{file.versionCount} version{file.versionCount !== 1 ? 's' : ''}</span>
+                  </div>
+                </div>
+              </div>
+              
+              {/* File Actions */}
+              <div className="flex items-center space-x-2 mt-3">
+                <Button
+                  size="sm"
+                  onClick={() => onFileView(file.id)}
+                  className="bg-primary hover:bg-primary-hover text-primary-foreground"
+                >
+                  <Eye className="h-3 w-3 mr-1" />
+                  View Latest
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => onFileEdit(file.id)}
+                  className="border-border hover:bg-muted"
+                >
+                  <Edit className="h-3 w-3 mr-1" />
+                  Edit
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => onViewHistory(file.id)}
+                  className="border-border hover:bg-muted"
+                >
+                  <History className="h-3 w-3 mr-1" />
+                  History
+                </Button>
+              </div>
+            </div>
+
+            {/* Versions Section */}
+            <div className="flex-1 min-w-0">
+              <h4 className="text-sm font-medium text-card-foreground mb-3">Available Versions</h4>
+              <div className="space-y-2">
+                {file.versions.map((version, index) => (
+                  <div 
+                    key={version.version}
+                    className={`flex items-center justify-between p-3 rounded-lg border transition-all hover:bg-muted/50 ${
+                      index === 0 ? 'border-primary/30 bg-primary/5' : 'border-border'
+                    }`}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-2">
+                        <Badge 
+                          variant={index === 0 ? "default" : "secondary"}
+                          className={index === 0 ? "bg-primary text-primary-foreground" : ""}
+                        >
+                          {version.version}
+                        </Badge>
+                        {index === 0 && (
+                          <Badge variant="outline" className="text-xs border-primary/30 text-primary">
+                            Current
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="text-xs text-muted-foreground mt-1">
+                        <div>{version.lastModified} • {version.modifiedBy} • {version.size}</div>
+                        <div className="truncate">{version.changes}</div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center space-x-1 ml-3">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => onFileView(file.id, version.version)}
+                        className="h-8 w-8 p-0 hover:bg-muted"
+                      >
+                        <Eye className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => onFileDownload(file.id, version.version)}
+                        className="h-8 w-8 p-0 hover:bg-muted"
+                      >
+                        <Download className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </Card>
+      ))}
+    </div>
+  );
+};
+
+export default FileIndex;

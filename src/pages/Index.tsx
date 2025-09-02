@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Search, Filter, Grid, List } from "lucide-react";
-import FileCard from "@/components/FileCard";
+import FileIndex from "@/components/FileIndex";
 import SearchResults from "@/components/SearchResults";
 import CreateFileDialog from "@/components/CreateFileDialog";
 import FileViewer from "@/components/FileViewer";
@@ -262,26 +262,13 @@ const Index = () => {
             onFileClick={handleFileView}
           />
         ) : (
-          <div className={`grid gap-6 ${
-            viewMode === "grid" 
-              ? "grid-cols-1 md:grid-cols-2 lg:grid-cols-3" 
-              : "grid-cols-1"
-          }`}>
-            {files.map((file) => (
-              <FileCard
-                key={file.id}
-                name={file.name}
-                version={file.currentVersion}
-                lastModified={file.lastModified}
-                fileType={file.fileType}
-                versionCount={file.versionCount}
-                onView={() => handleFileView(file.id)}
-                onEdit={() => handleFileEdit(file.id)}
-                onDownload={() => handleFileDownload(file.id)}
-                onViewHistory={() => handleViewHistory(file.id)}
-              />
-            ))}
-          </div>
+          <FileIndex
+            files={files}
+            onFileView={handleFileView}
+            onFileEdit={handleFileEdit}
+            onFileDownload={handleFileDownload}
+            onViewHistory={handleViewHistory}
+          />
         )}
 
         {!showSearchResults && files.length === 0 && (
