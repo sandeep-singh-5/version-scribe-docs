@@ -15,6 +15,8 @@ interface FileIndexProps {
 
 
 const FileIndex = ({ files, onFileView, onFileEdit, onFileDownload, onViewHistory }: FileIndexProps) => {
+  // Safety check to ensure files is always an array
+  const safeFiles = Array.isArray(files) ? files : [];
 
   const getFileIcon = (fileType: string) => {
     switch (fileType.toLowerCase()) {
@@ -31,7 +33,7 @@ const FileIndex = ({ files, onFileView, onFileEdit, onFileDownload, onViewHistor
 
   return (
     <div className="space-y-4">
-      {files.map((file) => (
+      {safeFiles.map((file) => (
         
         <Card key={`${file.fileName}`}
  className="p-6 bg-card border-border">

@@ -109,7 +109,7 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [selectedFileHistory, setSelectedFileHistory] = useState<FileDataResponse>(null);
+  const [selectedFileHistory, setSelectedFileHistory] = useState<FileDataResponse | null>(null);
   const [files, setFiles] = useState<FileDataResponse[]>([]); 
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -124,7 +124,8 @@ const Index = () => {
         const res = await FileServices.GetAllFiles(); 
         console.log(res);
         
-        setFiles(res);
+        // Ensure res is an array before setting files
+        setFiles(Array.isArray(res) ? res : []);
       } catch (err) {
         console.error("Error fetching files:", err);
         setError("Failed to load files. Please try again later.");
