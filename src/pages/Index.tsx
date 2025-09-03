@@ -9,6 +9,7 @@ import CreateFileDialog from "@/components/CreateFileDialog";
 import VersionHistory from "@/components/VersionHistory";
 import { useToast } from "@/hooks/use-toast";
 import { FileDataResponse, FileVersionRaw } from "@/types/types";
+import { FileData } from "@/components/CreateFileDialog";
 import FileServices from "@/services/files/files";
 
 
@@ -150,13 +151,19 @@ const Index = () => {
     });
   };
 
-  const handleFileCreate = (fileName: string, fileType: string) => {
+  const handleFileCreate = (fileData: FileData) => {
     const newFile = {
-      
-      fileName: fileName,
-      
+      fileName: fileData.fileName,
       versions: [
-        { fileName:"Dickinson_Sample_Slides.pptx",keywords:"a3a3a3",downloadLink:"http://localhost:6001/akpms/userfiles/file/Dickinson_Sample_Slides.pptx",uploadedOn:"2025-09-02 11:18",author:"authr3",version:"1.0" }
+        {
+          fileName: fileData.fileName,
+          keywords: fileData.keywords,
+          downloadLink: fileData.downloadLink,
+          uploadedOn: fileData.uploadedOn,
+          author: fileData.author,
+          version: fileData.version,
+          remark: fileData.remark
+        }
       ]
     };
     setFiles([newFile, ...files]);
