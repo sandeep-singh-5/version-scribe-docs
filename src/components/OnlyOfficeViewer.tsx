@@ -1,21 +1,19 @@
 import React from 'react';
 import { DocumentEditor } from "@onlyoffice/document-editor-react";
 
-const OnlyOfficeViewer = ({ fileUrl }) => {
-  // Helper to get file extension from URL
+const OnlyOfficeViewer = ({ fileUrl, width = "100%", height = "100%" }) => {
+
   const getFileExtension = (url) => {
     try {
       const pathname = new URL(url).pathname;
-      const ext = pathname.split('.').pop().toLowerCase();
-      return ext;
-    } catch (e) {
-      // fallback if URL constructor fails (non-URL string)
+      const ext = pathname.split('.').pop();
+      return ext ? ext.toLowerCase() : '';
+    } catch {
       const parts = url.split('.');
       return parts.length > 1 ? parts.pop().toLowerCase() : '';
     }
   };
 
-  // Map file extensions to OnlyOffice types
   const getDocumentType = (ext) => {
     switch (ext) {
       case 'doc':
@@ -23,25 +21,19 @@ const OnlyOfficeViewer = ({ fileUrl }) => {
       case 'odt':
       case 'rtf':
         return { fileType: 'docx', documentType: 'word' };
-
       case 'xls':
       case 'xlsx':
       case 'ods':
         return { fileType: 'xlsx', documentType: 'cell' };
-
       case 'ppt':
       case 'pptx':
       case 'odp':
-        return { fileType: 'pptx', documentType: 'slide' };
-
+        return { fileType: 'pptx', documentType: 'presentation' };
       case 'pdf':
-        return { fileType: 'pdf', documentType: 'text' };
-
+        return { fileType: 'pdf', documentType: 'word' }; // PDFs load in word viewer
       case 'txt':
-        return { fileType: 'txt', documentType: 'text' };
-
+        return { fileType: 'txt', documentType: 'word' };
       default:
-        // default fallback
         return { fileType: 'docx', documentType: 'word' };
     }
   };
@@ -50,31 +42,23 @@ const OnlyOfficeViewer = ({ fileUrl }) => {
   const { fileType, documentType } = getDocumentType(ext);
 
   const onDocumentReady = () => {
-    console.log("Document is loaded");
+    console.log("OnlyOffice document loaded successfully");
   };
 
   const onLoadComponentError = (errorCode, errorDescription) => {
-    switch (errorCode) {
-      case -1:
-      case -2:
-      case -3:
-        console.error("OnlyOffice load error:", errorDescription);
-        break;
-      default:
-        console.error("Unknown error:", errorDescription);
-    }
+    console.error("OnlyOffice load error:", errorCode, errorDescription);
   };
 
   return (
-    <div style={{ width: '100%', height: '100%' }}>
+    <div style={{ width, height }}>
       <DocumentEditor
         id="docEditor"
-        documentServerUrl="http://192.168.137.75:8080/" 
+        documentServerUrl="http://192.168.137.75:8080/"
         config={{
           document: {
             fileType,
-            key: `task-${fileType}-${Date.now()}`,
-            title: `Task Document.${fileType}`,
+            key: `doc-${btoa(unescape(encodeURIComponent(fileUrl)))}`, // safer base64
+            title: `Document.${fileType}`,
             url: fileUrl,
           },
           documentType,

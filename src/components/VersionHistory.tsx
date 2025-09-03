@@ -3,18 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Eye, Download, Clock, User } from "lucide-react";
-
-interface Version {
-  version: string;
-  lastModified: string;
-  modifiedBy: string;
-  size: string;
-  changes?: string;
-}
+import { FileVersionRaw } from "@/types/types";
 
 interface VersionHistoryProps {
   filename: string;
-  versions: Version[];
+  versions: FileVersionRaw[];
   onVersionView: (version: string) => void;
   onVersionDownload: (version: string) => void;
 }
@@ -37,7 +30,7 @@ const VersionHistory = ({ filename, versions, onVersionView, onVersionDownload }
       </CardHeader>
       <CardContent className="space-y-4">
         {versions.map((version, index) => (
-          <div key={version.version}>
+          <div key={version.version + version.uploadedOn}>
             <div className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors">
               <div className="flex items-center space-x-4">
                 <Badge variant={getVersionBadgeVariant(version.version)} className="min-w-[60px] justify-center">
@@ -45,17 +38,16 @@ const VersionHistory = ({ filename, versions, onVersionView, onVersionDownload }
                 </Badge>
                 <div>
                   <div className="flex items-center space-x-2 mb-1">
-                    <span className="font-medium text-card-foreground">{version.lastModified}</span>
+                    <span className="font-medium text-card-foreground">{version.uploadedOn}</span>
                     <span className="text-muted-foreground">•</span>
-                    <span className="text-muted-foreground">{version.size}</span>
                   </div>
                   <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                     <User className="h-3 w-3" />
-                    <span>{version.modifiedBy}</span>
-                    {version.changes && (
+                    <span>{version.author}</span>
+                    {version.keywords && (
                       <>
                         <span>•</span>
-                        <span>{version.changes}</span>
+                        <span>{version.keywords}</span>
                       </>
                     )}
                   </div>

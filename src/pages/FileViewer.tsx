@@ -1,20 +1,28 @@
 import React from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams,useSearchParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Download, Edit3 } from 'lucide-react';
 import OnlyOfficeViewer from '@/components/OnlyOfficeViewer';
 
+
+type FileParams = {
+  fileName: string;
+  keywords: string;
+  downloadLink: string;
+  uploadedOn: string;
+  author: string;
+  version: string;
+};
 const FileViewerPage = () => {
-  const { fileId, version } = useParams();
   const navigate = useNavigate();
 
-  // In a real app, you'd fetch file data based on fileId and version
-  const mockFileData = {
-    name: 'Project Requirements.docx',
-    url: 'https://example.com/file.docx', // This would be the actual file URL
-    version: version || 'v1.0',
-    fileType: 'docx'
-  };
+const { fileName, version } = useParams();
+const [searchParams] = useSearchParams();
+
+const keywords = searchParams.get("keywords");
+const downloadLink = searchParams.get("downloadLink");
+const uploadedOn = searchParams.get("uploadedOn");
+const author = searchParams.get("author");
 
   const handleEdit = () => {
     // You could switch to edit mode or open a different editor
@@ -42,10 +50,10 @@ const FileViewerPage = () => {
           </Button>
           <div>
             <h1 className="text-lg font-semibold text-card-foreground">
-              {mockFileData.name}
+              {fileName}
             </h1>
             <p className="text-sm text-muted-foreground">
-              Version {mockFileData.version}
+              Version {version}
             </p>
           </div>
         </div>
@@ -75,7 +83,7 @@ const FileViewerPage = () => {
       {/* File Viewer */}
       <div className="flex-1 p-4">
         <div className="h-full border border-border rounded-lg overflow-hidden bg-card">
-          <OnlyOfficeViewer fileUrl={mockFileData.url} />
+          <OnlyOfficeViewer fileUrl={downloadLink} />
         </div>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -8,68 +8,70 @@ import SearchResults from "@/components/SearchResults";
 import CreateFileDialog from "@/components/CreateFileDialog";
 import VersionHistory from "@/components/VersionHistory";
 import { useToast } from "@/hooks/use-toast";
+import { FileDataResponse, FileVersionRaw } from "@/types/types";
+import FileServices from "@/services/files/files";
 
-// Mock data for demonstration - organized by file groups with multiple versions
-const mockFileGroups = [
-  {
-    id: "1",
-    name: "Project Proposal",
-    currentVersion: "v2.1",
-    lastModified: "2024-01-15 14:30",
-    fileType: "docx",
-    versionCount: 3,
-    versions: [
-      { version: "v2.1", lastModified: "2024-01-15 14:30", modifiedBy: "John Doe", size: "2.4 MB", changes: "Updated budget section" },
-      { version: "v2.0", lastModified: "2024-01-12 10:15", modifiedBy: "Jane Smith", size: "2.3 MB", changes: "Major revision with new timeline" },
-      { version: "v1.0", lastModified: "2024-01-08 16:20", modifiedBy: "John Doe", size: "1.8 MB", changes: "Initial version" },
-    ]
-  },
-  {
-    id: "2", 
-    name: "Budget Analysis",
-    currentVersion: "v1.3",
-    lastModified: "2024-01-14 09:15",
-    fileType: "xlsx",
-    versionCount: 4,
-    versions: [
-      { version: "v1.3", lastModified: "2024-01-14 09:15", modifiedBy: "Alice Johnson", size: "1.2 MB", changes: "Q4 projections updated" },
-      { version: "v1.2", lastModified: "2024-01-11 14:30", modifiedBy: "Bob Wilson", size: "1.1 MB", changes: "Fixed calculation errors" },
-      { version: "v1.1", lastModified: "2024-01-09 11:45", modifiedBy: "Alice Johnson", size: "1.0 MB", changes: "Added quarterly breakdown" },
-      { version: "v1.0", lastModified: "2024-01-05 13:20", modifiedBy: "Alice Johnson", size: "950 KB", changes: "Initial budget analysis" },
-    ]
-  },
-  {
-    id: "3",
-    name: "Marketing Strategy",
-    currentVersion: "v1.0",
-    lastModified: "2024-01-13 16:45",
-    fileType: "pptx",
-    versionCount: 1,
-    versions: [
-      { version: "v1.0", lastModified: "2024-01-13 16:45", modifiedBy: "Sarah Connor", size: "5.2 MB", changes: "Initial presentation" },
-    ]
-  },
-  {
-    id: "4",
-    name: "Technical Documentation",
-    currentVersion: "v3.0",
-    lastModified: "2024-01-12 11:20",
-    fileType: "docx",
-    versionCount: 5,
-    versions: [
-      { version: "v3.0", lastModified: "2024-01-12 11:20", modifiedBy: "Mike Chen", size: "3.8 MB", changes: "Complete API documentation rewrite" },
-      { version: "v2.2", lastModified: "2024-01-10 15:30", modifiedBy: "Mike Chen", size: "3.2 MB", changes: "Added new endpoints" },
-      { version: "v2.1", lastModified: "2024-01-08 09:45", modifiedBy: "Lisa Park", size: "3.0 MB", changes: "Security updates" },
-      { version: "v2.0", lastModified: "2024-01-05 14:10", modifiedBy: "Mike Chen", size: "2.8 MB", changes: "Major restructure" },
-      { version: "v1.0", lastModified: "2024-01-01 10:00", modifiedBy: "Mike Chen", size: "2.1 MB", changes: "Initial documentation" },
-    ]
-  },
-];
+
+// const mockFileGroups = [
+//   {
+//     id: "1",
+//     name: "Project Proposal",
+//     currentVersion: "v2.1",
+//     lastModified: "2024-01-15 14:30",
+//     fileType: "docx",
+//     versionCount: 3,
+//     versions: [
+//       { version: "v2.1", lastModified: "2024-01-15 14:30", modifiedBy: "John Doe", size: "2.4 MB", changes: "Updated budget section" },
+//       { version: "v2.0", lastModified: "2024-01-12 10:15", modifiedBy: "Jane Smith", size: "2.3 MB", changes: "Major revision with new timeline" },
+//       { version: "v1.0", lastModified: "2024-01-08 16:20", modifiedBy: "John Doe", size: "1.8 MB", changes: "Initial version" },
+//     ]
+//   },
+//   {
+//     id: "2", 
+//     name: "Budget Analysis",
+//     currentVersion: "v1.3",
+//     lastModified: "2024-01-14 09:15",
+//     fileType: "xlsx",
+//     versionCount: 4,
+//     versions: [
+//       { version: "v1.3", lastModified: "2024-01-14 09:15", modifiedBy: "Alice Johnson", size: "1.2 MB", changes: "Q4 projections updated" },
+//       { version: "v1.2", lastModified: "2024-01-11 14:30", modifiedBy: "Bob Wilson", size: "1.1 MB", changes: "Fixed calculation errors" },
+//       { version: "v1.1", lastModified: "2024-01-09 11:45", modifiedBy: "Alice Johnson", size: "1.0 MB", changes: "Added quarterly breakdown" },
+//       { version: "v1.0", lastModified: "2024-01-05 13:20", modifiedBy: "Alice Johnson", size: "950 KB", changes: "Initial budget analysis" },
+//     ]
+//   },
+//   {
+//     id: "3",
+//     name: "Marketing Strategy",
+//     currentVersion: "v1.0",
+//     lastModified: "2024-01-13 16:45",
+//     fileType: "pptx",
+//     versionCount: 1,
+//     versions: [
+//       { version: "v1.0", lastModified: "2024-01-13 16:45", modifiedBy: "Sarah Connor", size: "5.2 MB", changes: "Initial presentation" },
+//     ]
+//   },
+//   {
+//     id: "4",
+//     name: "Technical Documentation",
+//     currentVersion: "v3.0",
+//     lastModified: "2024-01-12 11:20",
+//     fileType: "docx",
+//     versionCount: 5,
+//     versions: [
+//       { version: "v3.0", lastModified: "2024-01-12 11:20", modifiedBy: "Mike Chen", size: "3.8 MB", changes: "Complete API documentation rewrite" },
+//       { version: "v2.2", lastModified: "2024-01-10 15:30", modifiedBy: "Mike Chen", size: "3.2 MB", changes: "Added new endpoints" },
+//       { version: "v2.1", lastModified: "2024-01-08 09:45", modifiedBy: "Lisa Park", size: "3.0 MB", changes: "Security updates" },
+//       { version: "v2.0", lastModified: "2024-01-05 14:10", modifiedBy: "Mike Chen", size: "2.8 MB", changes: "Major restructure" },
+//       { version: "v1.0", lastModified: "2024-01-01 10:00", modifiedBy: "Mike Chen", size: "2.1 MB", changes: "Initial documentation" },
+//     ]
+//   },
+// ];
 
 const mockSearchResults = [
   {
     id: "sr1",
-    filename: "Project Proposal",
+    fileName: "Project Proposal",
     version: "v2.1",
     snippet: "quarterly budget allocations and comprehensive implementation timeline",
     fullContent: [
@@ -86,7 +88,7 @@ const mockSearchResults = [
   },
   {
     id: "sr2",
-    filename: "Budget Analysis",
+    fileName: "Budget Analysis",
     version: "v1.3", 
     snippet: "Q4 financial projections and detailed cost analysis for implementation phase",
     fullContent: [
@@ -107,10 +109,32 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [selectedFileHistory, setSelectedFileHistory] = useState<any>(null);
-  const [files, setFiles] = useState(mockFileGroups);
+  const [selectedFileHistory, setSelectedFileHistory] = useState<FileDataResponse>(null);
+  const [files, setFiles] = useState<FileDataResponse[]>([]); 
   const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
+
+  useEffect(() => {
+    const fetchFiles = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await FileServices.GetAllFiles(); 
+        console.log(res);
+        
+        setFiles(res);
+      } catch (err) {
+        console.error("Error fetching files:", err);
+        setError("Failed to load files. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFiles();
+  }, []);
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
       setShowSearchResults(false);
@@ -125,114 +149,215 @@ const Index = () => {
     });
   };
 
-  const handleFileCreate = (filename: string, fileType: string) => {
+  const handleFileCreate = (fileName: string, fileType: string) => {
     const newFile = {
-      id: `file-${Date.now()}`,
-      name: filename,
-      currentVersion: "v1.0",
-      lastModified: new Date().toLocaleString(),
-      fileType,
-      versionCount: 1,
+      
+      fileName: fileName,
+      
       versions: [
-        { version: "v1.0", lastModified: new Date().toLocaleString(), modifiedBy: "You", size: "New", changes: "Initial creation" }
+        { fileName:"Dickinson_Sample_Slides.pptx",keywords:"a3a3a3",downloadLink:"http://localhost:6001/akpms/userfiles/file/Dickinson_Sample_Slides.pptx",uploadedOn:"2025-09-02 11:18",author:"authr3",version:"1.0" }
       ]
     };
     setFiles([newFile, ...files]);
   };
+const handleFileView = (fileData: FileVersionRaw, version?: string) => {
+ console.log(".........................>>>>>>>>>>>>>>>",fileData);
+ 
+console.log("=====================>",fileData);
 
-  const handleFileView = (fileId: string, version?: string) => {
-    const file = files.find(f => f.id === fileId);
-    if (file) {
-      const viewVersion = version || file.currentVersion;
-      window.open(`/file/${fileId}/${viewVersion}`, '_blank');
-      toast({
-        title: "File Opened",
-        description: `Opening ${file.name} ${viewVersion} in new tab`,
-      });
-    }
-  };
-
-  const handleFileEdit = (fileId: string, version?: string) => {
-    const fileIndex = files.findIndex(f => f.id === fileId);
-    if (fileIndex === -1) return;
-
-    const file = files[fileIndex];
-    const editVersion = version || file.currentVersion;
-    
-    // Open file in edit mode in new tab
-    window.open(`/file/${fileId}/${editVersion}?mode=edit`, '_blank');
-    
-    // Calculate next version number
-    const currentVersion = file.currentVersion;
-    const versionParts = currentVersion.replace('v', '').split('.');
-    const major = parseInt(versionParts[0]);
-    const minor = parseInt(versionParts[1]);
-    
-    let newVersion: string;
-    if (minor >= 9) {
-      newVersion = `v${major + 1}.0`;
-    } else {
-      newVersion = `v${major}.${minor + 1}`;
-    }
-    
-    // Create new version entry (this will be created when the file is saved)
-    const newVersionEntry = {
-      version: newVersion,
-      lastModified: new Date().toLocaleString(),
-      modifiedBy: "You",
-      size: "Updated",
-      changes: `Edited from ${editVersion}`
-    };
-    
-    // Update file with new version
-    const updatedFile = {
-      ...file,
-      currentVersion: newVersion,
-      lastModified: new Date().toLocaleString(),
-      versionCount: file.versionCount + 1,
-      versions: [newVersionEntry, ...file.versions]
-    };
-    
-    const updatedFiles = [...files];
-    updatedFiles[fileIndex] = updatedFile;
-    setFiles(updatedFiles);
-    
+  if (!fileData) {
     toast({
-      title: "File Opened for Editing",
-      description: `Opening ${file.name} in new tab. New version ${newVersion} will be created on save.`,
+      title: "File Not Found",
+      description: `No file found for ${fileData.fileName}`,
+      variant: "destructive",
     });
-  };
+    return;
+  }
 
-  const handleFileDownload = (fileId: string) => {
+  const viewVersion = version;
+
+  // Validate that this version exists in the file's versions
+  const matchingVersion = fileData.version;
+  if (!matchingVersion) {
     toast({
-      title: "Download Started",
-      description: "File download has been initiated",
+      title: "Version Not Found",
+      description: `Version ${viewVersion} is not available for ${fileData.fileName}`,
+      variant: "destructive",
     });
-  };
+    return;
+  }
+// Suppose you have fileId and version values
+const routeUrl = `/file/${fileData.fileName}/${fileData.version}?keywords=${encodeURIComponent(fileData.keywords)}&downloadLink=${encodeURIComponent(fileData.downloadLink)}&uploadedOn=${encodeURIComponent(fileData.uploadedOn)}&author=${encodeURIComponent(fileData.author)}`;
 
-  const handleViewHistory = (fileId: string) => {
-    const file = files.find(f => f.id === fileId);
-    if (file) {
-      setSelectedFileHistory(file);
-    }
-  };
+window.open(routeUrl, "_blank");
 
-  const handleVersionView = (version: string) => {
-    if (selectedFileHistory) {
-      window.open(`/file/${selectedFileHistory.id}/${version}`, '_blank');
-      toast({
-        title: "Version Opened",
-        description: `Opening ${selectedFileHistory.name} ${version} in new tab`,
-      });
-    }
-  };
 
-  const handleVersionDownload = (version: string) => {
+// Open in new tab/window
+window.open(routeUrl, "_blank");
+
+
+  toast({
+    title: "File Opened",
+    description: `Opening ${fileData.fileName} (version ${viewVersion}) in a new tab.`,
+  });
+};
+
+const handleFileEdit = (fileName: string, version?: string) => {
+  const fileIndex = files.findIndex(f => f.fileName === fileName);
+  if (fileIndex === -1) {
     toast({
-      title: "Download Started", 
-      description: `Downloading ${selectedFileHistory?.name} ${version}`,
+      title: "File Not Found",
+      description: `No file found for ${fileName}`,
+      variant: "destructive",
     });
+    return;
+  }
+
+  const file = files[fileIndex];
+  const currentVersion = version || file.versions[0]?.version || "v1.0";
+
+  // Validate version format vX.Y
+  const match = currentVersion.match(/^v(\d+)\.(\d+)$/);
+  if (!match) {
+    toast({
+      title: "Invalid Version Format",
+      description: `Cannot edit file with invalid version format: ${currentVersion}`,
+      variant: "destructive",
+    });
+    return;
+  }
+
+  const major = parseInt(match[1], 10);
+  const minor = parseInt(match[2], 10);
+  const newVersion = minor >= 9 ? `v${major + 1}.0` : `v${major}.${minor + 1}`;
+
+  // Open in edit mode
+  window.open(`/file/${fileName}/${currentVersion}?mode=edit`, "_blank");
+
+  // Add placeholder for new version (local UI only until saved)
+  const newVersionEntry: FileVersionRaw = {
+    fileName: fileName,
+    keywords: file.versions[0]?.keywords || "",
+    downloadLink: "#", // Will be set once saved
+    uploadedOn: new Date().toISOString(),
+    author: "You",
+    version: newVersion,
   };
+
+  const updatedFile = {
+    ...file,
+    versions: [newVersionEntry, ...file.versions],
+  };
+
+  const updatedFiles = [...files];
+  updatedFiles[fileIndex] = updatedFile;
+  setFiles(updatedFiles);
+
+  toast({
+    title: "File Opened for Editing",
+    description: `Opening ${fileName} in new tab. New version ${newVersion} will be created on save.`,
+  });
+};
+const handleFileDownload = (fileName: string, version?: string) => {
+  const file = files.find(f => f.fileName === fileName);
+  if (!file) {
+    toast({
+      title: "File Not Found",
+      description: `No file found for ${fileName}`,
+      variant: "destructive",
+    });
+    return;
+  }
+
+  const versionToDownload = version || file.versions[0]?.version;
+  const versionData = file.versions.find(v => v.version === versionToDownload);
+
+  if (!versionData) {
+    toast({
+      title: "Version Not Found",
+      description: `Version ${versionToDownload} not found for ${fileName}`,
+      variant: "destructive",
+    });
+    return;
+  }
+
+  // Trigger download
+  window.open(versionData.downloadLink, "_blank");
+
+  toast({
+    title: "Download Started",
+    description: `Downloading ${fileName} ${versionToDownload}`,
+  });
+};
+
+const handleViewHistory = (fileName: string) => {
+  const file = files.find(f => f.fileName === fileName);
+  if (file) {
+    setSelectedFileHistory(file);
+  } else {
+    toast({
+      title: "File Not Found",
+      description: `No history found for ${fileName}`,
+      variant: "destructive",
+    });
+  }
+};
+
+const handleVersionView = (version: string) => {
+  if (!selectedFileHistory) {
+    toast({
+      title: "No File Selected",
+      description: "Please select a file before viewing a version.",
+      variant: "destructive",
+    });
+    return;
+  }
+
+  const versionData = selectedFileHistory.versions.find(v => v.version === version);
+  if (!versionData) {
+    toast({
+      title: "Version Not Found",
+      description: `Version ${version} not found for ${selectedFileHistory.fileName}`,
+      variant: "destructive",
+    });
+    return;
+  }
+
+  window.open(versionData.downloadLink, "_blank");
+
+  toast({
+    title: "Version Opened",
+    description: `Opening ${selectedFileHistory.fileName} ${version} in a new tab.`,
+  });
+};
+
+const handleVersionDownload = (version: string) => {
+  if (!selectedFileHistory) {
+    toast({
+      title: "No File Selected",
+      description: "Please select a file before downloading a version.",
+      variant: "destructive",
+    });
+    return;
+  }
+
+  const versionData = selectedFileHistory.versions.find(v => v.version === version);
+  if (!versionData) {
+    toast({
+      title: "Version Not Found",
+      description: `Version ${version} not found for ${selectedFileHistory.fileName}`,
+      variant: "destructive",
+    });
+    return;
+  }
+
+  window.open(versionData.downloadLink, "_blank");
+
+  toast({
+    title: "Download Started",
+    description: `Downloading ${selectedFileHistory.fileName} ${version}`,
+  });
+};
 
   return (
     <div className="min-h-screen bg-background">
@@ -287,7 +412,7 @@ const Index = () => {
                 onClick={() => setShowSearchResults(false)}
                 className={!showSearchResults ? "bg-primary text-primary-foreground" : "border-border hover:bg-muted"}
               >
-                All Files ({files.length})
+                All Files 
               </Button>
               {showSearchResults && (
                 <Button
@@ -324,12 +449,12 @@ const Index = () => {
         </div>
 
         {/* Content */}
-        {showSearchResults ? (
+        {/* {showSearchResults ? (
           <SearchResults 
             results={mockSearchResults} 
             onFileClick={handleFileView}
           />
-        ) : (
+        ) : ( */}
           <FileIndex
             files={files}
             onFileView={handleFileView}
@@ -337,7 +462,7 @@ const Index = () => {
             onFileDownload={handleFileDownload}
             onViewHistory={handleViewHistory}
           />
-        )}
+        {/* )} */}
 
         {!showSearchResults && files.length === 0 && (
           <div className="text-center py-12">
@@ -363,7 +488,7 @@ const Index = () => {
               <DialogTitle className="text-card-foreground">Version History</DialogTitle>
             </DialogHeader>
             <VersionHistory
-              filename={selectedFileHistory.name}
+              filename={selectedFileHistory.fileName}
               versions={selectedFileHistory.versions}
               onVersionView={handleVersionView}
               onVersionDownload={handleVersionDownload}
