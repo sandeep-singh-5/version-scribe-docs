@@ -368,57 +368,68 @@ const handleVersionDownload = (version: string) => {
 };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-secondary">
       {/* Header */}
-      <header className="bg-card border-b border-border shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-card-foreground">Document Manager</h1>
-              <p className="text-muted-foreground mt-1">Manage your file versions with ease</p>
+      <header className="bg-card/95 backdrop-blur-sm border-b border-border shadow-file-card sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="space-y-1">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+                Document Manager
+              </h1>
+              <p className="text-muted-foreground text-sm sm:text-base">
+                Manage your file versions with ease
+              </p>
             </div>
-            <CreateFileDialog onFileCreate={handleFileCreate} />
+            <div className="flex-shrink-0">
+              <CreateFileDialog onFileCreate={handleFileCreate} />
+            </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {/* Search Bar */}
-        <div className="mb-8">
-          <div className="flex items-center space-x-4 mb-4">
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-4 sm:mb-6">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search documents, content, or versions..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                className="pl-10 border-border bg-card"
+                className="pl-10 h-12 text-base border-border bg-card/50 backdrop-blur-sm shadow-file-card focus:shadow-file-card-hover transition-all duration-200"
               />
             </div>
-            <Button 
-              onClick={handleSearch}
-              className="bg-primary hover:bg-primary-hover text-primary-foreground"
-            >
-              <Search className="h-4 w-4 mr-2" />
-              Search
-            </Button>
-            <Button 
-              variant="outline" 
-              size="icon"
-              className="border-border hover:bg-muted"
-            >
-              <Filter className="h-4 w-4" />
-            </Button>
+            <div className="flex gap-2 sm:gap-3">
+              <Button 
+                onClick={handleSearch}
+                className="bg-gradient-primary hover:opacity-90 text-primary-foreground shadow-file-card hover:shadow-file-card-hover transition-all duration-200 h-12 px-6"
+              >
+                <Search className="h-4 w-4 mr-2" />
+                <span className="hidden sm:inline">Search</span>
+              </Button>
+              <Button 
+                variant="outline" 
+                size="icon"
+                className="border-border hover:bg-muted/50 backdrop-blur-sm h-12 w-12"
+              >
+                <Filter className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-2">
               <Button
                 variant={!showSearchResults ? "default" : "outline"}
                 size="sm"
                 onClick={() => setShowSearchResults(false)}
-                className={!showSearchResults ? "bg-primary text-primary-foreground" : "border-border hover:bg-muted"}
+                className={!showSearchResults 
+                  ? "bg-gradient-primary text-primary-foreground shadow-file-card" 
+                  : "border-border hover:bg-muted/50 backdrop-blur-sm"
+                }
               >
                 All Files 
               </Button>
@@ -426,7 +437,7 @@ const handleVersionDownload = (version: string) => {
                 <Button
                   variant="default"
                   size="sm"
-                  className="bg-primary text-primary-foreground"
+                  className="bg-gradient-primary text-primary-foreground shadow-file-card"
                 >
                   Search Results ({mockSearchResults.length})
                 </Button>
@@ -434,22 +445,30 @@ const handleVersionDownload = (version: string) => {
             </div>
 
             {!showSearchResults && (
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center gap-2 bg-card/50 backdrop-blur-sm p-1 rounded-lg border border-border">
                 <Button
-                  variant={viewMode === "grid" ? "default" : "outline"}
+                  variant={viewMode === "grid" ? "default" : "ghost"}
                   size="sm"
                   onClick={() => setViewMode("grid")}
-                  className={viewMode === "grid" ? "bg-primary text-primary-foreground" : "border-border hover:bg-muted"}
+                  className={viewMode === "grid" 
+                    ? "bg-primary text-primary-foreground shadow-sm" 
+                    : "hover:bg-muted/50"
+                  }
                 >
                   <Grid className="h-4 w-4" />
+                  <span className="hidden sm:inline ml-2">Grid</span>
                 </Button>
                 <Button
-                  variant={viewMode === "list" ? "default" : "outline"}
+                  variant={viewMode === "list" ? "default" : "ghost"}
                   size="sm"
                   onClick={() => setViewMode("list")}
-                  className={viewMode === "list" ? "bg-primary text-primary-foreground" : "border-border hover:bg-muted"}
+                  className={viewMode === "list" 
+                    ? "bg-primary text-primary-foreground shadow-sm" 
+                    : "hover:bg-muted/50"
+                  }
                 >
                   <List className="h-4 w-4" />
+                  <span className="hidden sm:inline ml-2">List</span>
                 </Button>
               </div>
             )}
@@ -473,13 +492,16 @@ const handleVersionDownload = (version: string) => {
         {/* )} */}
 
         {!showSearchResults && files.length === 0 && (
-          <div className="text-center py-12">
-            <div className="bg-card rounded-lg border border-border p-8 max-w-md mx-auto">
-              <h3 className="text-lg font-semibold text-card-foreground mb-2">
+          <div className="text-center py-16 sm:py-20">
+            <div className="bg-card/50 backdrop-blur-sm rounded-2xl border border-border p-8 sm:p-12 max-w-md mx-auto shadow-file-card hover:shadow-file-card-hover transition-all duration-300">
+              <div className="w-20 h-20 mx-auto mb-6 bg-gradient-primary rounded-full flex items-center justify-center">
+                <Search className="w-8 h-8 text-primary-foreground" />
+              </div>
+              <h3 className="text-xl sm:text-2xl font-bold text-card-foreground mb-3">
                 No Documents Yet
               </h3>
-              <p className="text-muted-foreground mb-4">
-                Get started by creating your first document
+              <p className="text-muted-foreground mb-6 text-sm sm:text-base">
+                Get started by creating your first document or uploading an existing file
               </p>
               <CreateFileDialog onFileCreate={handleFileCreate} />
             </div>
@@ -491,9 +513,9 @@ const handleVersionDownload = (version: string) => {
       {/* Version History Dialog */}
       {selectedFileHistory && (
         <Dialog open={!!selectedFileHistory} onOpenChange={() => setSelectedFileHistory(null)}>
-          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-card border-border">
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto bg-card/95 backdrop-blur-sm border-border shadow-file-card-hover">
             <DialogHeader>
-              <DialogTitle className="text-card-foreground">Version History</DialogTitle>
+              <DialogTitle className="text-xl font-bold text-card-foreground">Version History</DialogTitle>
             </DialogHeader>
             <VersionHistory
               filename={selectedFileHistory.fileName}
