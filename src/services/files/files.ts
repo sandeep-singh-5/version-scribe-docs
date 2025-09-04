@@ -22,19 +22,20 @@ const FileServices = {
   /**
    * Create a new file
    */
-  CreateFile: async ({ bodyData }: { bodyData: BodyData }) => {
-    try {
-      const payload = {
-        ...FILE.CREATE_FILE(),
-        bodyData,
-      };
-      const res = await APIrequest(payload);
-      return res;
-    } catch (error) {
-      console.error("Error creating file:", error);
-      throw error;
-    }
-  },
+ CreateFile: async ({ bodyData }: { bodyData: BodyData }) => {
+  try {
+    const payload = {
+      ...FILE.CREATE_FILE(), // e.g. { url: 'http://localhost:8080/api/docs/upload', method: 'POST' }
+      bodyData,              // can be FormData or JSON
+      headers: bodyData instanceof FormData ? {} : { "Content-Type": "application/json" },
+    };
+
+    const res = await APIrequest(payload);
+    return res;
+  } catch (error) {
+    console.error("Error creating file:", error);
+    throw error;
+  }},
 
   /**
    * Update a file by ID

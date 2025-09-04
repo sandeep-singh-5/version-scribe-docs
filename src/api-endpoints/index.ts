@@ -10,9 +10,8 @@ const FILE = defineAPIConfig({
     url: `files/api/${id}`,
     method: "GET",
   }),
-
   CREATE_FILE: () => ({
-    url: "files/api",
+    url: "api/docs/upload",
     method: "POST",
   }),
 
