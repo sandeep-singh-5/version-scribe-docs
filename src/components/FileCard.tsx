@@ -2,6 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FileText, Edit, Eye, Download, History } from "lucide-react";
+import EditFileDialog from "./EditFileDialog";
 
 interface FileCardProps {
   name: string;
@@ -13,6 +14,13 @@ interface FileCardProps {
   onEdit: () => void;
   onDownload: () => void;
   onViewHistory: () => void;
+  onFileUpdate?: (fileData: any) => void;
+  latestVersion?: {
+    content?: string;
+    downloadLink: string;
+    author: string;
+    version: string;
+  };
 }
 
 const FileCard = ({ 
@@ -24,7 +32,9 @@ const FileCard = ({
   onView, 
   onEdit, 
   onDownload,
-  onViewHistory 
+  onViewHistory,
+  onFileUpdate,
+  latestVersion 
 }: FileCardProps) => {
   return (
     <Card className="group cursor-pointer transition-all duration-200 hover:shadow-file-card-hover hover:-translate-y-1 bg-card border-border shadow-file-card">
@@ -72,18 +82,38 @@ const FileCard = ({
             <Eye className="h-4 w-4 mr-1" />
             View
           </Button>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={(e) => {
-              e.stopPropagation();
-              onEdit();
-            }}
-            className="text-primary hover:bg-primary/20"
-          >
-            <Edit className="h-4 w-4 mr-1" />
-            Edit
-          </Button>
+          {onFileUpdate ? (
+            <EditFileDialog
+              fileName={name}
+              fileType={fileType}
+              versionCount={versionCount}
+              onFileUpdate={onFileUpdate}
+              latestVersion={latestVersion}
+            >
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={(e) => e.stopPropagation()}
+                className="text-primary hover:bg-primary/20"
+              >
+                <Edit className="h-4 w-4 mr-1" />
+                Edit
+              </Button>
+            </EditFileDialog>
+          ) : (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit();
+              }}
+              className="text-primary hover:bg-primary/20"
+            >
+              <Edit className="h-4 w-4 mr-1" />
+              Edit
+            </Button>
+          )}
           {versionCount > 1 && (
             <Button 
               variant="ghost" 

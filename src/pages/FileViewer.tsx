@@ -3,6 +3,7 @@ import { useParams,useSearchParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Download, Edit3 } from 'lucide-react';
 import OnlyOfficeViewer from '@/components/OnlyOfficeViewer';
+import EditFileDialog from '@/components/EditFileDialog';
 
 
 type FileParams = {
@@ -24,9 +25,9 @@ const downloadLink = searchParams.get("downloadLink");
 const uploadedOn = searchParams.get("uploadedOn");
 const author = searchParams.get("author");
 
-  const handleEdit = () => {
-    // You could switch to edit mode or open a different editor
-    console.log('Edit mode activated');
+  const handleFileUpdate = (fileData: any) => {
+    console.log('File updated:', fileData);
+    // You could refresh the file data or navigate to the new version
   };
 
   const handleDownload = () => {
@@ -59,15 +60,26 @@ const author = searchParams.get("author");
         </div>
         
         <div className="flex items-center space-x-2">
-          <Button 
-            variant="outline" 
-            size="sm"
-            onClick={handleEdit}
-            className="border-border hover:bg-muted"
+          <EditFileDialog
+            fileName={fileName || ''}
+            fileType={fileName?.split('.').pop() || ''}
+            versionCount={1} // You might want to get this from props or API
+            onFileUpdate={handleFileUpdate}
+            latestVersion={{
+              downloadLink: downloadLink || '',
+              author: author || '',
+              version: version || '1.0'
+            }}
           >
-            <Edit3 className="h-4 w-4 mr-2" />
-            Edit
-          </Button>
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="border-border hover:bg-muted"
+            >
+              <Edit3 className="h-4 w-4 mr-2" />
+              Edit
+            </Button>
+          </EditFileDialog>
           <Button 
             variant="outline" 
             size="sm"
