@@ -69,43 +69,143 @@ import EditFileDialog from "@/components/EditFileDialog";
 //     ]
 //   },
 // ];
+interface SearchResult {
+  indexedAt: string;
+  fileData: {
+    fileName: string;
+    keywords: string;
+    downloadLink: string;
+    uploadedOn: string;
+    author: string;
+    version: string;
+  };
+  content: string;
+}
 
-const mockSearchResults = [
+const mockSearchResults: SearchResult[] = [
   {
-    id: "sr1",
-    fileName: "Project Proposal",
-    version: "v2.1",
-    snippet: "quarterly budget allocations and comprehensive implementation timeline",
-    fullContent: [
-      "Executive Summary: This document outlines the comprehensive project proposal for Q2 2024.",
-      "The project aims to enhance our document management system with advanced version control.",
-      "Key objectives include implementing OnlyOffice integration and improving user experience.",
-      "Budget allocation: $150,000 distributed across development, testing, and deployment phases."
-    ],
-    fileType: "docx",
-    relevanceScore: 0.95,
-    createdBy: "John Doe",
-    lastModified: "2024-01-15 14:30",
-    size: "2.4 MB",
+    indexedAt: "2025-08-15T10:30:00Z",
+    fileData: {
+      fileName: "Project Proposal.pdf",
+      keywords: "project, proposal, Q2 2024, version control",
+      downloadLink: "https://example.com/files/project-proposal.pdf",
+      uploadedOn: "2025-08-10T08:00:00Z",
+      author: "John Smith",
+      version: "1.0.0"
+    },
+    content: `Executive Summary: This document outlines the comprehensive project proposal for Q2 2024. The primary objective of the proposal is to overhaul the current document management infrastructure and introduce a modular, scalable version control system across departments. 
+
+In doing so, the project will enhance operational efficiency, ensure higher compliance with audit standards, and reduce redundancy across data pipelines. The integration of OnlyOffice as a collaborative editing solution is also discussed in detail, emphasizing its role in streamlining internal document workflows.
+
+The document breaks down the project into three phases: Planning & Design, Implementation, and Evaluation. Phase one will focus on stakeholder alignment and requirements gathering. Phase two includes system development, third-party integration, and internal training. The final phase is dedicated to user feedback, continuous improvement, and long-term roadmap planning.
+
+Budget: $150,000 is allocated across the three phases, with a heavier focus on development resources and testing infrastructure. A contingency buffer of 10% has been applied to account for scope adjustments.
+
+Risk analysis, timeline projections, and quality assurance measures are included in the appendices, offering a well-rounded view of project feasibility. The proposal concludes with KPIs designed to track adoption, performance improvements, and user satisfaction metrics.`
   },
   {
-    id: "sr2",
-    fileName: "Budget Analysis",
-    version: "v1.3", 
-    snippet: "Q4 financial projections and detailed cost analysis for implementation phase",
-    fullContent: [
-      "Q4 Financial Analysis Report: Comprehensive review of project expenditures and forecasts.",
-      "Total project cost estimate: $285,000 including infrastructure and personnel costs.",
-      "ROI projection shows 150% return within 18 months of full implementation.",
-      "Risk assessment indicates low financial risk with high confidence in timeline adherence."
-    ],
-    fileType: "xlsx",
-    relevanceScore: 0.87,
-    createdBy: "Alice Johnson",
-    lastModified: "2024-01-14 09:15",
-    size: "1.2 MB",
+    indexedAt: "2025-08-20T14:45:00Z",
+    fileData: {
+      fileName: "Budget Analysis.pdf",
+      keywords: "finance, analysis, ROI, Q4",
+      downloadLink: "https://example.com/files/budget-analysis.pdf",
+      uploadedOn: "2025-08-18T12:30:00Z",
+      author: "Jane Doe",
+      version: "2.1.3"
+    },
+    content: `The Q4 Financial Analysis Report provides a thorough breakdown of project expenditures, revenue forecasts, and overall financial health across departments. This quarter observed a 12% increase in operational costs, primarily driven by infrastructure investments and contractor fees.
+
+Revenue, however, saw a 15% growth due to expansion into new markets and increased customer retention metrics. Marketing expenditure returned a higher-than-expected ROI, particularly in paid media and referral campaigns.
+
+Forecasting models project a total cost of ownership (TCO) of $285,000 for the upcoming fiscal year, with a projected ROI of 150% within an 18-month horizon. Various scenarios were modeled, accounting for best-case, average-case, and pessimistic economic conditions.
+
+Break-even analysis indicates profitability at month 14, assuming continued performance. Risk analysis identifies currency fluctuation, vendor delays, and regulatory changes as potential threats, each with mitigation strategies detailed in Section 7.
+
+Tables A–F provide a granular view of department-level spend and actuals vs projections. Additional visualizations (charts and graphs) have been provided in the appendix for stakeholder presentations.`
   },
+  {
+    indexedAt: "2025-08-22T09:10:00Z",
+    fileData: {
+      fileName: "Marketing Strategy 2025.docx",
+      keywords: "marketing, strategy, 2025, campaigns",
+      downloadLink: "https://example.com/files/marketing-strategy-2025.docx",
+      uploadedOn: "2025-08-21T11:00:00Z",
+      author: "Emily Clarkson",
+      version: "3.0"
+    },
+    content: `This strategy document defines the marketing roadmap for the 2025 fiscal year. Key objectives include brand visibility, lead generation, customer retention, and competitive differentiation. The document is structured into five core sections: Market Research, Strategy Framework, Tactical Execution, Budget Planning, and Metrics/KPIs.
+
+We begin by analyzing macroeconomic trends and consumer behavior shifts, particularly post-pandemic digital adoption. The target audience segmentation has been refined using recent CRM and behavioral data, and new personas have been created to align campaigns accordingly.
+
+The strategy is heavily focused on content marketing, community building, and inbound lead generation. Campaigns will span email, social media, influencer partnerships, webinars, and SEO. A particular focus is placed on TikTok, LinkedIn, and YouTube as growth channels.
+
+Budget allocation is based on historical ROI and projected impact: 40% to paid search and social, 25% to content creation, and the rest split between events and branding initiatives. Each campaign includes detailed channel strategy, messaging guides, and intended funnel stage impact.
+
+Monthly reporting cycles and quarterly strategy reviews are scheduled. Success will be measured through engagement rate, MQLs, CAC, and LTV. The appendix contains Gantt charts for rollout timelines and a content calendar outline.`
+  },
+  {
+    indexedAt: "2025-08-25T08:00:00Z",
+    fileData: {
+      fileName: "Employee Handbook.pdf",
+      keywords: "HR, policies, employee, handbook",
+      downloadLink: "https://example.com/files/employee-handbook.pdf",
+      uploadedOn: "2025-08-23T16:20:00Z",
+      author: "HR Department",
+      version: "5.2"
+    },
+    content: `The Employee Handbook is a comprehensive guide to our company’s policies, code of conduct, benefits, and workplace expectations. It begins with our mission, vision, and values, establishing the cultural framework all employees are expected to align with.
+
+Core sections include: Workplace Policies, Equal Opportunity Employment, Harassment & Discrimination, Health & Safety, Internet & Device Use, Leave Policies, and Employee Benefits. New for 2025 is the inclusion of a Remote Work & Hybrid Policy, designed to offer flexibility while maintaining productivity and accountability.
+
+Leave entitlements have been updated to reflect regional compliance changes, and our performance review system has transitioned to a continuous feedback model rather than annual reviews. The handbook also outlines our DEI commitments and employee support programs.
+
+All employees are expected to acknowledge receipt of the handbook and complete annual compliance training. The final section addresses disciplinary procedures and grievance resolution protocols.
+
+Legal compliance notes, revision history, and HR contact information are included in the final appendix for transparency.`
+  },
+  {
+    indexedAt: "2025-08-28T13:40:00Z",
+    fileData: {
+      fileName: "Technical Specification - API Gateway.pdf",
+      keywords: "tech spec, API, gateway, architecture",
+      downloadLink: "https://example.com/files/api-gateway-spec.pdf",
+      uploadedOn: "2025-08-26T09:55:00Z",
+      author: "Backend Team",
+      version: "0.9.1-beta"
+    },
+    content: `This technical specification details the architecture, components, and configurations for the company’s API Gateway. The purpose of this gateway is to manage, route, and secure external and internal API calls across microservices.
+
+We cover three primary components: Routing Logic (based on URL patterns, headers, and query parameters), Rate Limiting (per client and endpoint), and Authentication (JWT, OAuth2, and API keys). The document also explains how plugins and middleware will be utilized to enable logging, tracing, CORS, and payload transformations.
+
+Diagrams illustrate data flow, request chaining, and error handling processes. Infrastructure is built on top of Kubernetes, and the gateway will use Envoy Proxy with a custom control plane. Traffic observability is enabled through OpenTelemetry.
+
+Security measures include WAF integration, IP whitelisting, and token revocation mechanisms. Performance benchmarks show 99th percentile latency under 20ms for 1000 RPS. Future versions will include GraphQL federation and edge caching.
+
+Detailed configuration samples, Helm charts, and Terraform modules are attached in the appendix.`
+  },
+  {
+    indexedAt: "2025-08-30T17:20:00Z",
+    fileData: {
+      fileName: "Client Contract - Acme Corp.docx",
+      keywords: "legal, contract, client, Acme",
+      downloadLink: "https://example.com/files/client-contract-acme.docx",
+      uploadedOn: "2025-08-29T14:00:00Z",
+      author: "Legal Team",
+      version: "1.3.4"
+    },
+    content: `This contract outlines the complete terms of service between our organization and Acme Corp, including legal responsibilities, financial obligations, and service-level agreements (SLAs). 
+
+The agreement is structured into 12 sections covering scope of services, payment terms, dispute resolution, confidentiality, termination clauses, and liability limitations. It includes detailed appendices for service delivery schedules, contact points, and escalation protocols.
+
+Special attention is given to data protection, with clauses aligning with GDPR and CCPA regulations. Both parties agree to mutual indemnification in the event of data breaches or compliance failures.
+
+The agreement is valid for 24 months, renewable upon mutual consent. Billing will occur quarterly with a 30-day net payment term. All intellectual property developed under this contract is owned by the client unless otherwise specified in writing.
+
+Executed digitally and governed by California law, this document was reviewed by both legal teams and signed on August 28, 2025.`
+  }
 ];
+
+
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -119,59 +219,89 @@ const Index = () => {
  const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingFileVersion, setEditingFileVersion] = useState<FileVersionRaw | null>(null);
   const [editedRemark, setEditedRemark] = useState(""); // Example editable field (remark)
+// ⬅️ Move this outside the useEffect block
+const fetchFiles = async () => {
+  setLoading(true);
+  setError(null);
+  try {
+    const res = await FileServices.GetAllFiles(); 
+    console.log(res);
+    setFiles(Array.isArray(res) ? res : []);
+  } catch (err) {
+    console.error("Error fetching files:", err);
+    setError("Failed to load files. Please try again later.");
+  } finally {
+    setLoading(false);
+  }
+};
 
 
-  useEffect(() => {
-    const fetchFiles = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await FileServices.GetAllFiles(); 
-        console.log(res);
-        
-        // Ensure res is an array before setting files
-        setFiles(Array.isArray(res) ? res : []);
-      } catch (err) {
-        console.error("Error fetching files:", err);
-        setError("Failed to load files. Please try again later.");
-      } finally {
-        setLoading(false);
-      }
-    };
+ useEffect(() => {
+  fetchFiles();
+}, []);
 
-    fetchFiles();
-  }, []);
-  const handleSearch = async () => {
-    if (!searchQuery.trim()) {
+const handleSearch = async () => {
+  if (!searchQuery.trim()) {
+    setShowSearchResults(false);
+    return;
+  }
+
+  try {
+    // Call your API function with the searchQuery or fileId
+    const results = await FileServices.GetSearchResult({ fileId: searchQuery.trim() });
+
+    if (results && results.results.length > 0) {
+      // Show results UI
+      setShowSearchResults(true);
+
+      toast({
+        title: "Search Completed",
+        description: `Found ${results.results.length} results for "${searchQuery}"`,
+      });
+
+      // Update your state with results to display them
+      setShowSearchResults(results.results);
+    } else {
       setShowSearchResults(false);
-      return;
+      toast({
+        title: "No Results",
+        description: `No results found for "${searchQuery}"`,
+      });
     }
-
-    // Simulate API call
-    setShowSearchResults(true);
+  } catch (error) {
+    setShowSearchResults(false);
     toast({
-      title: "Search Completed",
-      description: `Found ${mockSearchResults.length} results for "${searchQuery}"`,
+      title: "Error",
+      description: "Failed to fetch search results. Please try again."
     });
+  }
+};
+
+  const handleFileCreate = async (fileData: FileData) => {
+  const newFile = {
+    fileName: fileData.fileName,
+    versions: [
+      {
+        fileName: fileData.fileName,
+        keywords: fileData.keywords,
+        downloadLink: fileData.downloadLink,
+        uploadedOn: fileData.uploadedOn,
+        author: fileData.author,
+        version: fileData.version,
+        remark: fileData.remark
+      }
+    ]
   };
 
-  const handleFileCreate = (fileData: FileData) => {
-    const newFile = {
-      fileName: fileData.fileName,
-      versions: [
-        {
-          fileName: fileData.fileName,
-          keywords: fileData.keywords,
-          downloadLink: fileData.downloadLink,
-          uploadedOn: fileData.uploadedOn,
-          author: fileData.author,
-          version: fileData.version,
-          remark: fileData.remark
-        }
-      ]
-    };
-    setFiles([newFile, ...files]);
-  };
+
+  toast({
+    title: "File Created",
+    description: `File ${fileData.fileName} created successfully.`,
+  });
+
+  await fetchFiles(); // ⬅️ refresh list
+};
+
 const handleFileView = (fileData: FileVersionRaw, version?: string) => {
  console.log(".........................>>>>>>>>>>>>>>>",fileData);
  
@@ -214,7 +344,7 @@ window.open(routeUrl, "_blank");
   });
 };
 
-const handleFileEdit = (latestFileVersion: FileVersionRaw, version?: string) => {
+const handleFileEdit = async (latestFileVersion: FileVersionRaw, version?: string) => {
     const currentVersion = version || latestFileVersion.version;
     console.log("Current version:", currentVersion);
 
@@ -244,7 +374,7 @@ const handleFileEdit = (latestFileVersion: FileVersionRaw, version?: string) => 
     const newVersionEntry: FileVersionRaw = {
       fileName: latestFileVersion.fileName,
       keywords: latestFileVersion.keywords || "",
-      downloadLink: "#",
+      downloadLink: latestFileVersion.downloadLink || "",
       uploadedOn: new Date().toISOString(),
       author: "You",
       version: newVersion,
@@ -254,33 +384,33 @@ const handleFileEdit = (latestFileVersion: FileVersionRaw, version?: string) => 
     // Instead of adding new file & opening new tab, open modal for editing
     setEditingFileVersion(newVersionEntry);
     setEditModalOpen(true);
+    
+  await fetchFiles();
   };
 
   // Save edited data (simulate saving)
-  const handleSaveEdit = () => {
-    if (!editingFileVersion) return;
+  const handleSaveEdit = async () => {
+  if (!editingFileVersion) return;
 
-    const updatedVersion = {
-      ...editingFileVersion,
-      remark: editedRemark,
-      uploadedOn: new Date().toISOString(), // update upload date on save
-    };
-
-    const newFile = {
-      fileName: updatedVersion.fileName,
-      versions: [updatedVersion],
-    };
-
-    setFiles(prevFiles => [newFile, ...prevFiles]);
-
-    setEditModalOpen(false);
-    setEditingFileVersion(null);
-
-    toast({
-      title: "File Saved",
-      description: `Saved new version ${updatedVersion.version} of file ${updatedVersion.fileName}.`,
-    });
+  const updatedVersion = {
+    ...editingFileVersion,
+    remark: editedRemark,
+    uploadedOn: new Date().toISOString(),
   };
+
+  // Simulate save logic here...
+
+  setEditModalOpen(false);
+  setEditingFileVersion(null);
+
+  toast({
+    title: "File Saved",
+    description: `Saved new version ${updatedVersion.version} of file ${updatedVersion.fileName}.`,
+  });
+
+  await fetchFiles(); // ⬅️ refresh list after save
+};
+
 
   const handleCloseEditModal = () => {
     setEditModalOpen(false);
@@ -497,12 +627,12 @@ const handleVersionDownload = (version: string) => {
         </div>
 
         {/* Content */}
-        {/* {showSearchResults ? (
+        {showSearchResults ? (
           <SearchResults 
             results={mockSearchResults} 
             onFileClick={handleFileView}
           />
-        ) : ( */}
+        ) : (
           <FileIndex
             files={files}
             onFileView={handleFileView}
@@ -510,7 +640,7 @@ const handleVersionDownload = (version: string) => {
             onFileDownload={handleFileDownload}
             onViewHistory={handleViewHistory}
           />
-        {/* )} */}
+        )}
 
         {!showSearchResults && files.length === 0 && (
           <div className="text-center py-16 sm:py-20">

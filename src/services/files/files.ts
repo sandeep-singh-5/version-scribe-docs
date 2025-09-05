@@ -37,46 +37,15 @@ const FileServices = {
     throw error;
   }},
 
-  /**
-   * Update a file by ID
-   */
-  UpdateFile: async ({ fileId, bodyData }: { fileId: string; bodyData: BodyData }) => {
-    try {
-      const payload = {
-        ...FILE.UPDATE_FILE(fileId),
-        bodyData,
-      };
-      const res = await APIrequest(payload);
-      return res;
-    } catch (error) {
-      console.error("Error updating file:", error);
-      throw error;
-    }
-  },
-
-  /**
-   * Delete a file by ID
-   */
-  DeleteFile: async ({ fileId }: { fileId: string }) => {
-    try {
-      const payload = {
-        ...FILE.DELETE_FILE(fileId),
-      };
-      const res = await APIrequest(payload);
-      return res;
-    } catch (error) {
-      console.error("Error deleting file:", error);
-      throw error;
-    }
-  },
+ 
 
   /**
    * Get version history for a file
    */
-  GetVersionHistory: async ({ fileId }: { fileId: string }) => {
+  GetSearchResult: async ({ fileId }: { fileId: string }) => {
     try {
       const payload = {
-        ...FILE.GET_VERSION_HISTORY(fileId),
+        ...FILE.GET_SEARCH_RESULT(fileId),
       };
       const res = await APIrequest(payload);
       return res;
@@ -86,22 +55,7 @@ const FileServices = {
     }
   },
 
-  /**
-   * Download a specific version of a file
-   */
-  DownloadVersion: async ({ fileId, version }: { fileId: string; version: string }) => {
-    try {
-      const payload = {
-        ...FILE.DOWNLOAD_VERSION(fileId, version),
-        // If you want the file as blob, you might need to adjust APIrequest to support `responseType: 'blob'`
-      };
-      const res = await APIrequest(payload);
-      return res;
-    } catch (error) {
-      console.error("Error downloading version:", error);
-      throw error;
-    }
-  },
+  
 };
 
 export default FileServices;

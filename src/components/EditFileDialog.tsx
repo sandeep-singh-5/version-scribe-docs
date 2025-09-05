@@ -38,7 +38,8 @@ const EditFileDialog = ({
   onOpenChange: controlledOnOpenChange,
   latestVersion 
 }: EditFileDialogProps) => {
-  const isDocxFile = fileType.toLowerCase() === 'docx';
+  const isDocxFile = fileType.toLowerCase() === 'docx'||fileType.toLowerCase()==='doc';
+  console.log(isDocxFile);
   
   const [internalOpen, setInternalOpen] = useState(false);
   const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
@@ -50,7 +51,7 @@ const EditFileDialog = ({
   const quillRef = useRef<HTMLDivElement>(null);
   const quillInstance = useRef<Quill | null>(null);
   const { toast } = useToast();
-
+  
   const [formData, setFormData] = useState({
     keywords: "",
     author: latestVersion?.author || "",
@@ -113,13 +114,15 @@ const EditFileDialog = ({
 
     try {
       const blob = await Packer.toBlob(doc);
-      const nextVersion = `${parseFloat(latestVersion?.version || "1.0") + 0.1}`;
+
+console.log(latestVersion);
+
 
       const uploadForm = new FormData();
       uploadForm.append("file", blob, fileName);
       uploadForm.append("author", formData.author);
       uploadForm.append("remark", formData.remark);
-      uploadForm.append("version", nextVersion);
+      uploadForm.append("version", latestVersion?.version);
       uploadForm.append("filename", fileName.replace(/\.[^/.]+$/, ""));
       uploadForm.append("keywords", formData.keywords);
 
@@ -131,13 +134,15 @@ const EditFileDialog = ({
         downloadLink: `/uploads/${fileName}`,
         uploadedOn: new Date().toISOString(),
         author: formData.author,
-        version: nextVersion,
+        version: latestVersion?.version,
         remark: formData.remark,
       };
 
       onFileUpdate(fileData);
-      toast({ title: "New Version Created", description: `${fileName} v${nextVersion} saved successfully` });
+      toast({ title: "New Version Created", description: `${fileName} v${latestVersion?.version} saved successfully` });
       resetForm();
+
+      
     } catch (err) {
       toast({
         title: "Error",
@@ -182,13 +187,12 @@ const EditFileDialog = ({
   const handleSubmitUpload = async () => {
     if (!selectedFile || !validateForm()) return;
 
-    const nextVersion = `${parseFloat(latestVersion?.version || "1.0") + 0.1}`;
 
     const uploadForm = new FormData();
     uploadForm.append("file", selectedFile);
     uploadForm.append("author", formData.author);
     uploadForm.append("remark", formData.remark);
-    uploadForm.append("version", nextVersion);
+    uploadForm.append("version", latestVersion?.version);
     uploadForm.append("filename", fileName.replace(/\.[^/.]+$/, ""));
     uploadForm.append("keywords", formData.keywords);
 
@@ -201,12 +205,12 @@ const EditFileDialog = ({
         downloadLink: `/uploads/${selectedFile.name}`,
         uploadedOn: new Date().toISOString(),
         author: formData.author,
-        version: nextVersion,
+        version: latestVersion?.version,
         remark: formData.remark,
       };
 
       onFileUpdate(fileData);
-      toast({ title: "File Updated", description: `${fileName} v${nextVersion} uploaded successfully` });
+      toast({ title: "File Updated", description: `${fileName} v${latestVersion?.version} uploaded successfully` });
       resetForm();
     } catch (err) {
       toast({

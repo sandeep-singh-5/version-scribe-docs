@@ -3,44 +3,59 @@ import { Badge } from "@/components/ui/badge";
 import { FileText, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-interface SearchResult {
-  id: string;
-  filename: string;
+interface FileData {
+  fileName: string;
+  keywords: string;
+  downloadLink: string;
+  uploadedOn: string;
+  author: string;
   version: string;
-  snippet: string;
-  fullContent: string[];
-  fileType: string;
-  relevanceScore: number;
-  createdBy: string;
-  lastModified: string;
-  size: string;
+}
+
+interface SearchResult {
+  indexedAt: string;
+  fileData: FileData;
+  content: string;
 }
 
 interface SearchResultsProps {
   results: SearchResult[];
-  onFileClick: (id: string) => void;
+  onFileClick: (fileData: FileData, version: string) => void;
 }
 
 const SearchResults = ({ results, onFileClick }: SearchResultsProps) => {
-  if (results.length === 0) {
+  if (!results || results.length === 0) {
     return (
       <div className="text-center py-8">
-        <p className="text-muted-foreground">No results found. Try different search terms.</p>
+        <p className="text-muted-foreground">
+          No results found. Try different search terms.
+        </p>
       </div>
     );
   }
+
+  const getFileType = (filename: string) => {
+    const ext = filename.split(".").pop()?.toUpperCase() || "UNKNOWN";
+    return ext;
+  };
+
+  const getSnippet = (content: string) => {
+    return content.length > 200
+      ? content.substring(0, 200) + "..."
+      : content;
+  };
 
   return (
     <div className="space-y-6">
       <h3 className="text-lg font-semibold text-card-foreground mb-4">
         Search Results ({results.length})
       </h3>
-      
-      {results.map((result) => (
-        <Card 
-          key={result.id} 
+
+      {results.map((result, index) => (
+        <Card
+          key={index}
           className="cursor-pointer transition-all duration-200 hover:shadow-file-card-hover hover:-translate-y-0.5 bg-card border-border shadow-file-card"
-          onClick={() => onFileClick(result.id)}
+          onClick={() => onFileClick(result.fileData, result.fileData.version)}
         >
           <CardContent className="p-6">
             {/* File Header */}
@@ -51,66 +66,44 @@ const SearchResults = ({ results, onFileClick }: SearchResultsProps) => {
                 </div>
                 <div>
                   <h4 className="text-lg font-semibold text-card-foreground hover:text-primary transition-colors">
-                    {result.filename}
+                    {result.fileData.fileName}
                   </h4>
                   <div className="flex items-center space-x-2 mt-1">
                     <Badge variant="secondary" className="text-xs">
-                      {result.fileType.toUpperCase()}
+                      {getFileType(result.fileData.fileName)}
                     </Badge>
-                    <Badge variant="default" className="bg-primary text-primary-foreground text-xs">
-                      {result.version}
-                    </Badge>
-                    <Badge variant="outline" className="text-xs border-primary/30 text-primary">
-                      {Math.round(result.relevanceScore * 100)}% match
+                    <Badge
+                      variant="outline"
+                      className="text-xs border-primary/30 text-primary"
+                    >
+                      Indexed: {new Date(result.indexedAt).toLocaleDateString()}
                     </Badge>
                   </div>
                 </div>
               </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
+              <Button
+                variant="outline"
+                size="sm"
                 className="border-border hover:bg-muted"
                 onClick={(e) => {
                   e.stopPropagation();
-                  // Handle download
+                  window.open(result.fileData.downloadLink, "_blank");
                 }}
               >
                 <Download className="h-4 w-4 mr-2" />
-                Download
+                View
               </Button>
             </div>
-            
+
             {/* Content Preview */}
             <div className="mb-4">
-              <h5 className="text-sm font-medium text-card-foreground mb-2">Content Preview:</h5>
+              <h5 className="text-sm font-medium text-card-foreground mb-2">
+                Content Preview:
+              </h5>
               <div className="bg-muted/30 rounded-lg p-4 border border-border">
-                {result.fullContent.map((line, index) => (
-                  <p key={index} className="text-sm text-muted-foreground mb-1 leading-relaxed">
-                    {line}
-                  </p>
-                ))}
-                <div className="mt-2 pt-2 border-t border-border/50">
-                  <p className="text-xs text-muted-foreground italic">
-                    ...{result.snippet}...
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            {/* Version Details */}
-            <div className="flex items-center justify-between text-xs text-muted-foreground bg-muted/20 rounded-lg p-3">
-              <div className="flex items-center space-x-4">
-                <span>
-                  <span className="font-medium">Created by:</span> {result.createdBy}
-                </span>
-                <span>•</span>
-                <span>
-                  <span className="font-medium">Modified:</span> {result.lastModified}
-                </span>
-                <span>•</span>
-                <span>
-                  <span className="font-medium">Size:</span> {result.size}
-                </span>
+                <p className="text-sm text-muted-foreground mb-1 leading-relaxed">
+                  {getSnippet(result.content)}
+                </p>
               </div>
             </div>
           </CardContent>
