@@ -34,8 +34,10 @@ const EditFileDialog = ({
   children,
   latestVersion 
 }: EditFileDialogProps) => {
+  const isDocxFile = fileType.toLowerCase() === 'docx';
+  
   const [isOpen, setIsOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("upload");
+  const [activeTab, setActiveTab] = useState(isDocxFile ? "create" : "upload");
   const [showEditor, setShowEditor] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -48,9 +50,6 @@ const EditFileDialog = ({
     author: latestVersion?.author || "",
     remark: "",
   });
-
-  const isDocxFile = fileType.toLowerCase() === 'docx';
-  const hasMultipleVersions = versionCount > 1;
 
   const handleInputChange = (field: keyof typeof formData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -209,7 +208,7 @@ const EditFileDialog = ({
     setShowEditor(false);
     setSelectedFile(null);
     setIsOpen(false);
-    setActiveTab("upload");
+    setActiveTab(isDocxFile ? "create" : "upload");
     if (fileInputRef.current) fileInputRef.current.value = "";
     quillInstance.current = null;
   };
@@ -220,7 +219,7 @@ const EditFileDialog = ({
     return `.${ext}`;
   };
 
-  const showCreateOption = isDocxFile && hasMultipleVersions;
+  const showCreateOption = isDocxFile;
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -261,7 +260,6 @@ const EditFileDialog = ({
               value={activeTab} 
               onValueChange={setActiveTab} 
               className="w-full"
-              defaultValue={showCreateOption ? "create" : "upload"}
             >
               {showCreateOption && (
                 <TabsList className="grid w-full grid-cols-2 bg-muted/30 p-1 h-12">
