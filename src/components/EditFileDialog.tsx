@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import Quill from "quill";
 import "quill/dist/quill.snow.css";
 import { Document, Packer, Paragraph, TextRun } from "docx";
-import files from "../services/files/files";
+import FileServices from "@/services/files/files";
 
 interface EditFileDialogProps {
   fileName: string;
@@ -110,7 +110,7 @@ const EditFileDialog = ({
       uploadForm.append("filename", fileName.replace(/\.[^/.]+$/, ""));
       uploadForm.append("keywords", formData.keywords);
 
-      await files.CreateFile({ bodyData: uploadForm });
+      await FileServices.CreateFile({ bodyData: uploadForm });
 
       const fileData = {
         fileName,
@@ -180,7 +180,7 @@ const EditFileDialog = ({
     uploadForm.append("keywords", formData.keywords);
 
     try {
-      await files.CreateFile({ bodyData: uploadForm });
+      await FileServices.CreateFile({ bodyData: uploadForm });
 
       const fileData = {
         fileName,
