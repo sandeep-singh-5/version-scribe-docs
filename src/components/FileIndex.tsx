@@ -8,7 +8,7 @@ import { FileDataResponse,FileVersionRaw } from "@/types/types";
 interface FileIndexProps {
   files: FileDataResponse[];
   onFileView: (fileId: FileVersionRaw, version?: string) => void;
-  onFileEdit: (fileId: string, version?: string) => void;
+  onFileEdit: (fileId: FileVersionRaw, version?: string) => void;
   onFileDownload: (fileId: string, version?: string) => void;
   onViewHistory: (fileId: string) => void;
 }
@@ -77,7 +77,7 @@ const FileIndex = ({ files, onFileView, onFileEdit, onFileDownload, onViewHistor
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => onFileEdit(file.fileName)}
+                    onClick={() => onFileEdit(file.versions[0], file.versions[0].version)}
                     className="border-border hover:bg-muted/50 backdrop-blur-sm"
                   >
                     <Edit className="h-4 w-4 mr-2" />

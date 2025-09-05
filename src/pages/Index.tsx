@@ -210,7 +210,10 @@ window.open(routeUrl, "_blank");
   });
 };
 
-const handleFileEdit = (fileName: string, version?: string) => {
+const handleFileEdit = (latestFileVersion: FileVersionRaw, version?: string) => {
+  const { fileName } = latestFileVersion;
+
+  // Find the full file object in the list
   const fileIndex = files.findIndex(f => f.fileName === fileName);
   if (fileIndex === -1) {
     toast({
@@ -222,9 +225,10 @@ const handleFileEdit = (fileName: string, version?: string) => {
   }
 
   const file = files[fileIndex];
-  const currentVersion = version || file.versions[0]?.version || "v1.0";
 
-  // Validate version format vX.Y
+  const currentVersion = version || latestFileVersion.version;
+
+  // Validate version format
   const match = currentVersion.match(/^v(\d+)\.(\d+)$/);
   if (!match) {
     toast({
@@ -235,23 +239,22 @@ const handleFileEdit = (fileName: string, version?: string) => {
     return;
   }
 
+  // Generate new version
   const major = parseInt(match[1], 10);
   const minor = parseInt(match[2], 10);
   const newVersion = minor >= 9 ? `v${major + 1}.0` : `v${major}.${minor + 1}`;
 
-  // Open in edit mode
-  window.open(`/file/${fileName}/${currentVersion}?mode=edit`, "_blank");
-
-  // Add placeholder for new version (local UI only until saved)
+  // Create new placeholder version
   const newVersionEntry: FileVersionRaw = {
     fileName: fileName,
-    keywords: file.versions[0]?.keywords || "",
-    downloadLink: "#", // Will be set once saved
+    keywords: latestFileVersion.keywords || "",
+    downloadLink: "#", // Will be set after save
     uploadedOn: new Date().toISOString(),
     author: "You",
     version: newVersion,
   };
 
+  // Update the file versions list
   const updatedFile = {
     ...file,
     versions: [newVersionEntry, ...file.versions],
@@ -261,11 +264,15 @@ const handleFileEdit = (fileName: string, version?: string) => {
   updatedFiles[fileIndex] = updatedFile;
   setFiles(updatedFiles);
 
+  // Open the new version in edit mode
+  window.open(`/file/${fileName}/${newVersion}?mode=edit`, "_blank");
+
   toast({
     title: "File Opened for Editing",
     description: `Opening ${fileName} in new tab. New version ${newVersion} will be created on save.`,
   });
 };
+
 const handleFileDownload = (fileName: string, version?: string) => {
   const file = files.find(f => f.fileName === fileName);
   if (!file) {
