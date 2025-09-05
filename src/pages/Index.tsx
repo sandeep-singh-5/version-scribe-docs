@@ -547,6 +547,32 @@ const handleVersionDownload = (version: string) => {
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Edit File Dialog */}
+      {editingFileVersion && (
+        <EditFileDialog
+          open={editModalOpen}
+          onOpenChange={setEditModalOpen}
+          fileName={editingFileVersion.fileName}
+          fileType={editingFileVersion.fileName.split('.').pop()?.toLowerCase() || 'docx'}
+          versionCount={1}
+          onFileUpdate={(fileData) => {
+            const newFile = {
+              fileName: fileData.fileName,
+              versions: [fileData],
+            };
+            setFiles(prevFiles => [newFile, ...prevFiles]);
+            setEditModalOpen(false);
+            setEditingFileVersion(null);
+          }}
+          latestVersion={{
+            content: '',
+            downloadLink: editingFileVersion.downloadLink,
+            author: editingFileVersion.author,
+            version: editingFileVersion.version,
+          }}
+        />
+      )}
     </div>
   );
 };

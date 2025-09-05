@@ -17,7 +17,9 @@ interface EditFileDialogProps {
   fileType: string;
   versionCount: number;
   onFileUpdate: (fileData: any) => void;
-  children: React.ReactNode;
+  children?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   latestVersion?: {
     content?: string;
     downloadLink: string;
@@ -32,11 +34,15 @@ const EditFileDialog = ({
   versionCount, 
   onFileUpdate, 
   children,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
   latestVersion 
 }: EditFileDialogProps) => {
   const isDocxFile = fileType.toLowerCase() === 'docx';
   
-  const [isOpen, setIsOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
+  const setIsOpen = controlledOnOpenChange || setInternalOpen;
   const [activeTab, setActiveTab] = useState(isDocxFile ? "create" : "upload");
   const [showEditor, setShowEditor] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -231,9 +237,11 @@ const EditFileDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        {children}
-      </DialogTrigger>
+      {children && (
+        <DialogTrigger asChild>
+          {children}
+        </DialogTrigger>
+      )}
 
       <DialogContent className={`${showEditor ? "sm:max-w-6xl max-h-[90vh]" : "sm:max-w-2xl"} bg-card/95 backdrop-blur-sm border-border shadow-file-card-hover`}>
         <DialogHeader className="pb-4 border-b border-border/50">
