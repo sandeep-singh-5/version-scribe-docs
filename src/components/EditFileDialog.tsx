@@ -70,7 +70,15 @@ const EditFileDialog = ({
       if (quillRef.current && !quillInstance.current) {
         quillInstance.current = new Quill(quillRef.current, { 
           theme: "snow", 
-          placeholder: "Start editing your document..." 
+          placeholder: "Start editing your document...",
+          modules: {
+            toolbar: [
+              ['bold', 'italic', 'underline'],
+              ['link', 'blockquote'],
+              [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+              ['clean']
+            ]
+          }
         });
         
         // Load content from latest version if available
@@ -78,7 +86,7 @@ const EditFileDialog = ({
           quillInstance.current.setText(latestVersion.content);
         }
       }
-    }, 0);
+    }, 100);
   };
 
   const handleSaveNewVersion = async () => {
