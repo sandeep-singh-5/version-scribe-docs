@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { FileDataResponse, FileVersionRaw } from "@/types/types";
 import { FileData } from "@/components/CreateFileDialog";
 import FileServices from "@/services/files/files";
+import EditFileDialog from "@/components/EditFileDialog";
 
 
 // const mockFileGroups = [
@@ -115,6 +116,9 @@ const Index = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+ const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingFileVersion, setEditingFileVersion] = useState<FileVersionRaw | null>(null);
+  const [editedRemark, setEditedRemark] = useState(""); // Example editable field (remark)
 
 
   useEffect(() => {
@@ -211,67 +215,77 @@ window.open(routeUrl, "_blank");
 };
 
 const handleFileEdit = (latestFileVersion: FileVersionRaw, version?: string) => {
-  const { fileName } = latestFileVersion;
+    const currentVersion = version || latestFileVersion.version;
+    console.log("Current version:", currentVersion);
 
-  // Find the full file object in the list
-  const fileIndex = files.findIndex(f => f.fileName === fileName);
-  if (fileIndex === -1) {
-    toast({
-      title: "File Not Found",
-      description: `No file found for ${fileName}`,
-      variant: "destructive",
-    });
-    return;
-  }
+    const match = currentVersion.match(/^v?(\d+)\.(\d+)(?:\.(\d+))?$/);
+    console.log("Version match:", match);
 
-  const file = files[fileIndex];
+    if (!match) {
+      toast({
+        title: "Invalid Version Format",
+        description: `Cannot edit file with invalid version format: ${currentVersion}`,
+        variant: "destructive",
+      });
+      return;
+    }
 
-  const currentVersion = version || latestFileVersion.version;
+    const major = parseInt(match[1], 10);
+    const minor = parseInt(match[2], 10);
 
-  // Validate version format
-  const match = currentVersion.match(/^v(\d+)\.(\d+)$/);
-  if (!match) {
-    toast({
-      title: "Invalid Version Format",
-      description: `Cannot edit file with invalid version format: ${currentVersion}`,
-      variant: "destructive",
-    });
-    return;
-  }
+    // Increment version
+    const newVersion = minor >= 9
+      ? `${major + 1}.0`
+      : `${major}.${minor + 1}`;
 
-  // Generate new version
-  const major = parseInt(match[1], 10);
-  const minor = parseInt(match[2], 10);
-  const newVersion = minor >= 9 ? `v${major + 1}.0` : `v${major}.${minor + 1}`;
+    console.log("New version:", newVersion);
 
-  // Create new placeholder version
-  const newVersionEntry: FileVersionRaw = {
-    fileName: fileName,
-    keywords: latestFileVersion.keywords || "",
-    downloadLink: "#", // Will be set after save
-    uploadedOn: new Date().toISOString(),
-    author: "You",
-    version: newVersion,
+    // Prepare new version entry
+    const newVersionEntry: FileVersionRaw = {
+      fileName: latestFileVersion.fileName,
+      keywords: latestFileVersion.keywords || "",
+      downloadLink: "#",
+      uploadedOn: new Date().toISOString(),
+      author: "You",
+      version: newVersion,
+    };
+    console.log("New version entry:", newVersionEntry);
+
+    // Instead of adding new file & opening new tab, open modal for editing
+    setEditingFileVersion(newVersionEntry);
+    setEditModalOpen(true);
   };
 
-  // Update the file versions list
-  const updatedFile = {
-    ...file,
-    versions: [newVersionEntry, ...file.versions],
+  // Save edited data (simulate saving)
+  const handleSaveEdit = () => {
+    if (!editingFileVersion) return;
+
+    const updatedVersion = {
+      ...editingFileVersion,
+      remark: editedRemark,
+      uploadedOn: new Date().toISOString(), // update upload date on save
+    };
+
+    const newFile = {
+      fileName: updatedVersion.fileName,
+      versions: [updatedVersion],
+    };
+
+    setFiles(prevFiles => [newFile, ...prevFiles]);
+
+    setEditModalOpen(false);
+    setEditingFileVersion(null);
+
+    toast({
+      title: "File Saved",
+      description: `Saved new version ${updatedVersion.version} of file ${updatedVersion.fileName}.`,
+    });
   };
 
-  const updatedFiles = [...files];
-  updatedFiles[fileIndex] = updatedFile;
-  setFiles(updatedFiles);
-
-  // Open the new version in edit mode
-  window.open(`/file/${fileName}/${newVersion}?mode=edit`, "_blank");
-
-  toast({
-    title: "File Opened for Editing",
-    description: `Opening ${fileName} in new tab. New version ${newVersion} will be created on save.`,
-  });
-};
+  const handleCloseEditModal = () => {
+    setEditModalOpen(false);
+    setEditingFileVersion(null);
+  };
 
 const handleFileDownload = (fileName: string, version?: string) => {
   const file = files.find(f => f.fileName === fileName);
