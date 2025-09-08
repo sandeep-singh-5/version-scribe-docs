@@ -21,9 +21,12 @@ interface SearchResult {
 interface SearchResultsProps {
   results: SearchResult[];
   onFileClick: (fileData: FileData, version: string) => void;
+  searchQuery: string;
 }
 
-const SearchResults = ({ results, onFileClick }: SearchResultsProps) => {
+const SearchResults = ({ results, onFileClick ,searchQuery}: SearchResultsProps) => {
+  console.log("SearchResults component rendered with results:", results);
+  
   if (!results || results.length === 0) {
     return (
       <div className="text-center py-8">
@@ -91,7 +94,7 @@ const SearchResults = ({ results, onFileClick }: SearchResultsProps) => {
                 }}
               >
                 <Download className="h-4 w-4 mr-2" />
-                View
+                Download
               </Button>
             </div>
 

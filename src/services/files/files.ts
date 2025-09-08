@@ -47,7 +47,11 @@ const FileServices = {
       const payload = {
         ...FILE.GET_SEARCH_RESULT(fileId),
       };
+      console.log("Payload for GetSearchResult:", payload);
+      
       const res = await APIrequest(payload);
+      console.log(res);
+      
       return res;
     } catch (error) {
       console.error("Error fetching version history:", error);

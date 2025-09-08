@@ -11,6 +11,7 @@ import Quill from "quill";
 import "quill/dist/quill.snow.css";
 import { Document, Packer, Paragraph, TextRun } from "docx";
 import FileServices from "@/services/files/files";
+import { useNavigate } from "react-router-dom";
 
 interface EditFileDialogProps {
   fileName: string;
@@ -50,6 +51,7 @@ const EditFileDialog = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const quillRef = useRef<HTMLDivElement>(null);
   const quillInstance = useRef<Quill | null>(null);
+  const navigate = useNavigate();
   const { toast } = useToast();
   
   const [formData, setFormData] = useState({
@@ -141,8 +143,8 @@ console.log(latestVersion);
       onFileUpdate(fileData);
       toast({ title: "New Version Created", description: `${fileName} v${latestVersion?.version} saved successfully` });
       resetForm();
+      navigate("/");
 
-      
     } catch (err) {
       toast({
         title: "Error",

@@ -12,6 +12,7 @@ import { FileDataResponse, FileVersionRaw } from "@/types/types";
 import { FileData } from "@/components/CreateFileDialog";
 import FileServices from "@/services/files/files";
 import EditFileDialog from "@/components/EditFileDialog";
+import { set } from "date-fns";
 
 
 // const mockFileGroups = [
@@ -209,142 +210,135 @@ Executed digitally and governed by California law, this document was reviewed by
 
 const Index = () => {
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [selectedFileHistory, setSelectedFileHistory] = useState<FileDataResponse | null>(null);
-  const [files, setFiles] = useState<FileDataResponse[]>([]); 
+  const [files, setFiles] = useState<FileDataResponse[]>([]);
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
- const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingFileVersion, setEditingFileVersion] = useState<FileVersionRaw | null>(null);
   const [editedRemark, setEditedRemark] = useState(""); // Example editable field (remark)
-// ⬅️ Move this outside the useEffect block
-const fetchFiles = async () => {
-  setLoading(true);
-  setError(null);
-  try {
-    const res = await FileServices.GetAllFiles(); 
-    console.log(res);
-    setFiles(Array.isArray(res) ? res : []);
-  } catch (err) {
-    console.error("Error fetching files:", err);
-    setError("Failed to load files. Please try again later.");
-  } finally {
-    setLoading(false);
-  }
-};
-
-
- useEffect(() => {
-  fetchFiles();
-}, []);
-
-const handleSearch = async () => {
-  if (!searchQuery.trim()) {
-    setShowSearchResults(false);
-    return;
-  }
-
-  try {
-    // Call your API function with the searchQuery or fileId
-    const results = await FileServices.GetSearchResult({ fileId: searchQuery.trim() });
-
-    if (results && results.results.length > 0) {
-      // Show results UI
-      setShowSearchResults(true);
-
-      toast({
-        title: "Search Completed",
-        description: `Found ${results.results.length} results for "${searchQuery}"`,
-      });
-
-      // Update your state with results to display them
-      setShowSearchResults(results.results);
-    } else {
-      setShowSearchResults(false);
-      toast({
-        title: "No Results",
-        description: `No results found for "${searchQuery}"`,
-      });
+  // ⬅️ Move this outside the useEffect block
+  const fetchFiles = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await FileServices.GetAllFiles();
+      console.log(res);
+      setFiles(Array.isArray(res) ? res : []);
+    } catch (err) {
+      console.error("Error fetching files:", err);
+      setError("Failed to load files. Please try again later.");
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    setShowSearchResults(false);
-    toast({
-      title: "Error",
-      description: "Failed to fetch search results. Please try again."
-    });
-  }
-};
-
-  const handleFileCreate = async (fileData: FileData) => {
-  const newFile = {
-    fileName: fileData.fileName,
-    versions: [
-      {
-        fileName: fileData.fileName,
-        keywords: fileData.keywords,
-        downloadLink: fileData.downloadLink,
-        uploadedOn: fileData.uploadedOn,
-        author: fileData.author,
-        version: fileData.version,
-        remark: fileData.remark
-      }
-    ]
   };
 
 
-  toast({
-    title: "File Created",
-    description: `File ${fileData.fileName} created successfully.`,
-  });
+  useEffect(() => {
+    fetchFiles();
+  }, []);
 
-  await fetchFiles(); // ⬅️ refresh list
-};
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) {
+      setShowSearchResults(false);
+      return;
+    }
 
-const handleFileView = (fileData: FileVersionRaw, version?: string) => {
- console.log(".........................>>>>>>>>>>>>>>>",fileData);
- 
-console.log("=====================>",fileData);
+    try {
+      const results = await FileServices.GetSearchResult({ fileId: searchQuery.trim() });
+      console.log("------------------------->", results); // Correct use
+      setSearchResults(results); // Store actual results
 
-  if (!fileData) {
+      setShowSearchResults(true); 
+      console.log(results);
+
+      toast({
+        title: "Search Completed",
+        description: `Found ${results?.length} results for "${searchQuery}"`,
+      });
+    } catch (error) {
+      console.log(error);
+      
+      setShowSearchResults(false);
+      toast({
+        title: "Error",
+        description: "Failed to fetch search results. Please try again."
+      });
+    }
+  };
+
+  const handleFileCreate = async (fileData: FileData) => {
+    const newFile = {
+      fileName: fileData.fileName,
+      versions: [
+        {
+          fileName: fileData.fileName,
+          keywords: fileData.keywords,
+          downloadLink: fileData.downloadLink,
+          uploadedOn: fileData.uploadedOn,
+          author: fileData.author,
+          version: fileData.version,
+          remark: fileData.remark
+        }
+      ]
+    };
+
+
     toast({
-      title: "File Not Found",
-      description: `No file found for ${fileData.fileName}`,
-      variant: "destructive",
+      title: "File Created",
+      description: `File ${fileData.fileName} created successfully.`,
     });
-    return;
-  }
 
-  const viewVersion = version;
+    await fetchFiles(); // ⬅️ refresh list
+  };
 
-  // Validate that this version exists in the file's versions
-  const matchingVersion = fileData.version;
-  if (!matchingVersion) {
+  const handleFileView = (fileData: FileVersionRaw, version?: string) => {
+    console.log(".........................>>>>>>>>>>>>>>>", fileData);
+
+    console.log("=====================>", fileData);
+
+    if (!fileData) {
+      toast({
+        title: "File Not Found",
+        description: `No file found for ${fileData.fileName}`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const viewVersion = version;
+
+    // Validate that this version exists in the file's versions
+    const matchingVersion = fileData.version;
+    if (!matchingVersion) {
+      toast({
+        title: "Version Not Found",
+        description: `Version ${viewVersion} is not available for ${fileData.fileName}`,
+        variant: "destructive",
+      });
+      return;
+    }
+    // Suppose you have fileId and version values
+    const routeUrl = `/file/${fileData.fileName}/${fileData.version}?keywords=${encodeURIComponent(fileData.keywords)}&downloadLink=${encodeURIComponent(fileData.downloadLink)}&uploadedOn=${encodeURIComponent(fileData.uploadedOn)}&author=${encodeURIComponent(fileData.author)}`;
+
+    window.open(routeUrl, "_blank");
+
+
+    // Open in new tab/window
+    window.open(routeUrl, "_blank");
+
+
     toast({
-      title: "Version Not Found",
-      description: `Version ${viewVersion} is not available for ${fileData.fileName}`,
-      variant: "destructive",
+      title: "File Opened",
+      description: `Opening ${fileData.fileName} (version ${viewVersion}) in a new tab.`,
     });
-    return;
-  }
-// Suppose you have fileId and version values
-const routeUrl = `/file/${fileData.fileName}/${fileData.version}?keywords=${encodeURIComponent(fileData.keywords)}&downloadLink=${encodeURIComponent(fileData.downloadLink)}&uploadedOn=${encodeURIComponent(fileData.uploadedOn)}&author=${encodeURIComponent(fileData.author)}`;
+  };
 
-window.open(routeUrl, "_blank");
-
-
-// Open in new tab/window
-window.open(routeUrl, "_blank");
-
-
-  toast({
-    title: "File Opened",
-    description: `Opening ${fileData.fileName} (version ${viewVersion}) in a new tab.`,
-  });
-};
-
-const handleFileEdit = async (latestFileVersion: FileVersionRaw, version?: string) => {
+  const handleFileEdit = async (latestFileVersion: FileVersionRaw, version?: string) => {
     const currentVersion = version || latestFileVersion.version;
     console.log("Current version:", currentVersion);
 
@@ -384,32 +378,32 @@ const handleFileEdit = async (latestFileVersion: FileVersionRaw, version?: strin
     // Instead of adding new file & opening new tab, open modal for editing
     setEditingFileVersion(newVersionEntry);
     setEditModalOpen(true);
-    
-  await fetchFiles();
+
+    await fetchFiles();
   };
 
   // Save edited data (simulate saving)
   const handleSaveEdit = async () => {
-  if (!editingFileVersion) return;
+    if (!editingFileVersion) return;
 
-  const updatedVersion = {
-    ...editingFileVersion,
-    remark: editedRemark,
-    uploadedOn: new Date().toISOString(),
+    const updatedVersion = {
+      ...editingFileVersion,
+      remark: editedRemark,
+      uploadedOn: new Date().toISOString(),
+    };
+
+    // Simulate save logic here...
+
+    setEditModalOpen(false);
+    setEditingFileVersion(null);
+
+    toast({
+      title: "File Saved",
+      description: `Saved new version ${updatedVersion.version} of file ${updatedVersion.fileName}.`,
+    });
+
+    await fetchFiles(); // ⬅️ refresh list after save
   };
-
-  // Simulate save logic here...
-
-  setEditModalOpen(false);
-  setEditingFileVersion(null);
-
-  toast({
-    title: "File Saved",
-    description: `Saved new version ${updatedVersion.version} of file ${updatedVersion.fileName}.`,
-  });
-
-  await fetchFiles(); // ⬅️ refresh list after save
-};
 
 
   const handleCloseEditModal = () => {
@@ -417,106 +411,106 @@ const handleFileEdit = async (latestFileVersion: FileVersionRaw, version?: strin
     setEditingFileVersion(null);
   };
 
-const handleFileDownload = (fileName: string, version?: string) => {
-  const file = files.find(f => f.fileName === fileName);
-  if (!file) {
+  const handleFileDownload = (fileName: string, version?: string) => {
+    const file = files.find(f => f.fileName === fileName);
+    if (!file) {
+      toast({
+        title: "File Not Found",
+        description: `No file found for ${fileName}`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const versionToDownload = version || file.versions[0]?.version;
+    const versionData = file.versions.find(v => v.version === versionToDownload);
+
+    if (!versionData) {
+      toast({
+        title: "Version Not Found",
+        description: `Version ${versionToDownload} not found for ${fileName}`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Trigger download
+    window.open(versionData.downloadLink, "_blank");
+
     toast({
-      title: "File Not Found",
-      description: `No file found for ${fileName}`,
-      variant: "destructive",
+      title: "Download Started",
+      description: `Downloading ${fileName} ${versionToDownload}`,
     });
-    return;
-  }
+  };
 
-  const versionToDownload = version || file.versions[0]?.version;
-  const versionData = file.versions.find(v => v.version === versionToDownload);
+  const handleViewHistory = (fileName: string) => {
+    const file = files.find(f => f.fileName === fileName);
+    if (file) {
+      setSelectedFileHistory(file);
+    } else {
+      toast({
+        title: "File Not Found",
+        description: `No history found for ${fileName}`,
+        variant: "destructive",
+      });
+    }
+  };
 
-  if (!versionData) {
+  const handleVersionView = (version: string) => {
+    if (!selectedFileHistory) {
+      toast({
+        title: "No File Selected",
+        description: "Please select a file before viewing a version.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const versionData = selectedFileHistory.versions.find(v => v.version === version);
+    if (!versionData) {
+      toast({
+        title: "Version Not Found",
+        description: `Version ${version} not found for ${selectedFileHistory.fileName}`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    window.open(versionData.downloadLink, "_blank");
+
     toast({
-      title: "Version Not Found",
-      description: `Version ${versionToDownload} not found for ${fileName}`,
-      variant: "destructive",
+      title: "Version Opened",
+      description: `Opening ${selectedFileHistory.fileName} ${version} in a new tab.`,
     });
-    return;
-  }
+  };
 
-  // Trigger download
-  window.open(versionData.downloadLink, "_blank");
+  const handleVersionDownload = (version: string) => {
+    if (!selectedFileHistory) {
+      toast({
+        title: "No File Selected",
+        description: "Please select a file before downloading a version.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-  toast({
-    title: "Download Started",
-    description: `Downloading ${fileName} ${versionToDownload}`,
-  });
-};
+    const versionData = selectedFileHistory.versions.find(v => v.version === version);
+    if (!versionData) {
+      toast({
+        title: "Version Not Found",
+        description: `Version ${version} not found for ${selectedFileHistory.fileName}`,
+        variant: "destructive",
+      });
+      return;
+    }
 
-const handleViewHistory = (fileName: string) => {
-  const file = files.find(f => f.fileName === fileName);
-  if (file) {
-    setSelectedFileHistory(file);
-  } else {
+    window.open(versionData.downloadLink, "_blank");
+
     toast({
-      title: "File Not Found",
-      description: `No history found for ${fileName}`,
-      variant: "destructive",
+      title: "Download Started",
+      description: `Downloading ${selectedFileHistory.fileName} ${version}`,
     });
-  }
-};
-
-const handleVersionView = (version: string) => {
-  if (!selectedFileHistory) {
-    toast({
-      title: "No File Selected",
-      description: "Please select a file before viewing a version.",
-      variant: "destructive",
-    });
-    return;
-  }
-
-  const versionData = selectedFileHistory.versions.find(v => v.version === version);
-  if (!versionData) {
-    toast({
-      title: "Version Not Found",
-      description: `Version ${version} not found for ${selectedFileHistory.fileName}`,
-      variant: "destructive",
-    });
-    return;
-  }
-
-  window.open(versionData.downloadLink, "_blank");
-
-  toast({
-    title: "Version Opened",
-    description: `Opening ${selectedFileHistory.fileName} ${version} in a new tab.`,
-  });
-};
-
-const handleVersionDownload = (version: string) => {
-  if (!selectedFileHistory) {
-    toast({
-      title: "No File Selected",
-      description: "Please select a file before downloading a version.",
-      variant: "destructive",
-    });
-    return;
-  }
-
-  const versionData = selectedFileHistory.versions.find(v => v.version === version);
-  if (!versionData) {
-    toast({
-      title: "Version Not Found",
-      description: `Version ${version} not found for ${selectedFileHistory.fileName}`,
-      variant: "destructive",
-    });
-    return;
-  }
-
-  window.open(versionData.downloadLink, "_blank");
-
-  toast({
-    title: "Download Started",
-    description: `Downloading ${selectedFileHistory.fileName} ${version}`,
-  });
-};
+  };
 
   return (
     <div className="min-h-screen bg-gradient-secondary">
@@ -554,15 +548,15 @@ const handleVersionDownload = (version: string) => {
               />
             </div>
             <div className="flex gap-2 sm:gap-3">
-              <Button 
+              <Button
                 onClick={handleSearch}
                 className="bg-gradient-primary hover:opacity-90 text-primary-foreground shadow-file-card hover:shadow-file-card-hover transition-all duration-200 h-12 px-6"
               >
                 <Search className="h-4 w-4 mr-2" />
                 <span className="hidden sm:inline">Search</span>
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 size="icon"
                 className="border-border hover:bg-muted/50 backdrop-blur-sm h-12 w-12"
               >
@@ -577,12 +571,12 @@ const handleVersionDownload = (version: string) => {
                 variant={!showSearchResults ? "default" : "outline"}
                 size="sm"
                 onClick={() => setShowSearchResults(false)}
-                className={!showSearchResults 
-                  ? "bg-gradient-primary text-primary-foreground shadow-file-card" 
+                className={!showSearchResults
+                  ? "bg-gradient-primary text-primary-foreground shadow-file-card"
                   : "border-border hover:bg-muted/50 backdrop-blur-sm"
                 }
               >
-                All Files 
+                All Files
               </Button>
               {showSearchResults && (
                 <Button
@@ -590,7 +584,7 @@ const handleVersionDownload = (version: string) => {
                   size="sm"
                   className="bg-gradient-primary text-primary-foreground shadow-file-card"
                 >
-                  Search Results ({mockSearchResults.length})
+                  Search Results ({searchResults.length})
                 </Button>
               )}
             </div>
@@ -601,8 +595,8 @@ const handleVersionDownload = (version: string) => {
                   variant={viewMode === "grid" ? "default" : "ghost"}
                   size="sm"
                   onClick={() => setViewMode("grid")}
-                  className={viewMode === "grid" 
-                    ? "bg-primary text-primary-foreground shadow-sm" 
+                  className={viewMode === "grid"
+                    ? "bg-primary text-primary-foreground shadow-sm"
                     : "hover:bg-muted/50"
                   }
                 >
@@ -613,8 +607,8 @@ const handleVersionDownload = (version: string) => {
                   variant={viewMode === "list" ? "default" : "ghost"}
                   size="sm"
                   onClick={() => setViewMode("list")}
-                  className={viewMode === "list" 
-                    ? "bg-primary text-primary-foreground shadow-sm" 
+                  className={viewMode === "list"
+                    ? "bg-primary text-primary-foreground shadow-sm"
                     : "hover:bg-muted/50"
                   }
                 >
@@ -628,9 +622,10 @@ const handleVersionDownload = (version: string) => {
 
         {/* Content */}
         {showSearchResults ? (
-          <SearchResults 
-            results={mockSearchResults} 
+          <SearchResults
+            results={searchResults}
             onFileClick={handleFileView}
+            searchQuery={searchQuery}
           />
         ) : (
           <FileIndex
