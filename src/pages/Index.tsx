@@ -358,11 +358,7 @@ const Index = () => {
     const minor = parseInt(match[2], 10);
 
     // Increment version
-    const newVersion = minor >= 9
-      ? `${major + 1}.0`
-      : `${major}.${minor + 1}`;
 
-    console.log("New version:", newVersion);
 
     // Prepare new version entry
     const newVersionEntry: FileVersionRaw = {
@@ -371,7 +367,7 @@ const Index = () => {
       downloadLink: latestFileVersion.downloadLink || "",
       uploadedOn: new Date().toISOString(),
       author: "You",
-      version: newVersion,
+      version: latestFileVersion.version,
     };
     console.log("New version entry:", newVersionEntry);
 
@@ -681,15 +677,19 @@ const Index = () => {
           fileName={editingFileVersion.fileName}
           fileType={editingFileVersion.fileName.split('.').pop()?.toLowerCase() || 'docx'}
           versionCount={1}
-          onFileUpdate={(fileData) => {
-            const newFile = {
-              fileName: fileData.fileName,
-              versions: [fileData],
-            };
-            setFiles(prevFiles => [newFile, ...prevFiles]);
-            setEditModalOpen(false);
-            setEditingFileVersion(null);
-          }}
+          onFileUpdate={async (fileData) => {
+    // Close modal
+    setEditModalOpen(false);
+    setEditingFileVersion(null);
+
+    // ✅ Re-fetch from backend
+    await fetchFiles();
+
+    toast({
+      title: "File Updated",
+      description: `Successfully updated ${fileData.fileName}.`,
+    });
+  }}
           latestVersion={{
             content: '',
             downloadLink: editingFileVersion.downloadLink,

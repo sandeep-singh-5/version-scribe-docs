@@ -5,13 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Upload, FileText, Edit, Plus } from "lucide-react";
+import { Upload, FileText, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Quill from "quill";
 import "quill/dist/quill.snow.css";
 import { Document, Packer, Paragraph, TextRun } from "docx";
 import FileServices from "@/services/files/files";
 import { useNavigate } from "react-router-dom";
+import mammoth from "mammoth";
 
 interface EditFileDialogProps {
   fileName: string;
@@ -29,19 +30,18 @@ interface EditFileDialogProps {
   };
 }
 
-const EditFileDialog = ({ 
-  fileName, 
-  fileType, 
-  versionCount, 
-  onFileUpdate, 
+const EditFileDialog = ({
+  fileName,
+  fileType,
+  versionCount,
+  onFileUpdate,
   children,
   open: controlledOpen,
   onOpenChange: controlledOnOpenChange,
-  latestVersion 
+  latestVersion
 }: EditFileDialogProps) => {
-  const isDocxFile = fileType.toLowerCase() === 'docx'||fileType.toLowerCase()==='doc';
-  console.log(isDocxFile);
-  
+  const isDocxFile = fileType.toLowerCase() === "docx" || fileType.toLowerCase() === "doc";
+
   const [internalOpen, setInternalOpen] = useState(false);
   const isOpen = controlledOpen !== undefined ? controlledOpen : internalOpen;
   const setIsOpen = controlledOnOpenChange || setInternalOpen;
@@ -53,7 +53,7 @@ const EditFileDialog = ({
   const quillInstance = useRef<Quill | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
-  
+
   const [formData, setFormData] = useState({
     keywords: "",
     author: latestVersion?.author || "",
@@ -72,26 +72,47 @@ const EditFileDialog = ({
     return true;
   };
 
-  const handleCreateNewFile = () => {
+  const handleCreateNewFile = async () => {
     if (!validateForm()) return;
     setShowEditor(true);
-    setTimeout(() => {
+
+    setTimeout(async () => {
       if (quillRef.current && !quillInstance.current) {
-        quillInstance.current = new Quill(quillRef.current, { 
-          theme: "snow", 
+        quillInstance.current = new Quill(quillRef.current, {
+          theme: "snow",
           placeholder: "Start editing your document...",
           modules: {
             toolbar: [
-              ['bold', 'italic', 'underline'],
-              ['link', 'blockquote'],
-              [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-              ['clean']
-            ]
-          }
+              ["bold", "italic", "underline"],
+              ["link", "blockquote"],
+              [{ list: "ordered" }, { list: "bullet" }],
+              ["clean"],
+            ],
+          },
         });
-        
-        // Load content from latest version if available
-        if (latestVersion?.content) {
+
+        // Load latest version content if available
+        if (isDocxFile && latestVersion?.downloadLink) {
+          try {
+            const response = await fetch(latestVersion.downloadLink);
+            const arrayBuffer = await response.arrayBuffer();
+
+            // Convert to HTML with formatting
+            const result = await mammoth.convertToHtml({ arrayBuffer });
+            const htmlContent = result.value || "";
+
+            // Load into Quill (preserve formatting)
+            quillInstance.current.root.innerHTML = htmlContent;
+          } catch (error) {
+            console.error("Failed to load latest version:", error);
+            toast({
+              title: "Error",
+              description: "Could not load content from the latest version",
+              variant: "destructive",
+            });
+          }
+        } else if (latestVersion?.content) {
+          // Fallback: if we have stored plain content
           quillInstance.current.setText(latestVersion.content);
         }
       }
@@ -102,14 +123,14 @@ const EditFileDialog = ({
     if (!quillInstance.current) return;
     const plainText = quillInstance.current.getText().trim();
 
+    const newVersion = latestVersion?.version
+      ? (parseFloat(latestVersion.version) + 0.1).toFixed(1)
+      : "1.1";
+
     const doc = new Document({
       sections: [
         {
-          children: [
-            new Paragraph({
-              children: [new TextRun(plainText)],
-            }),
-          ],
+          children: [new Paragraph({ children: [new TextRun(plainText)] })],
         },
       ],
     });
@@ -117,14 +138,11 @@ const EditFileDialog = ({
     try {
       const blob = await Packer.toBlob(doc);
 
-console.log(latestVersion);
-
-
       const uploadForm = new FormData();
       uploadForm.append("file", blob, fileName);
       uploadForm.append("author", formData.author);
       uploadForm.append("remark", formData.remark);
-      uploadForm.append("version", latestVersion?.version);
+      uploadForm.append("version", newVersion);
       uploadForm.append("filename", fileName.replace(/\.[^/.]+$/, ""));
       uploadForm.append("keywords", formData.keywords);
 
@@ -136,15 +154,14 @@ console.log(latestVersion);
         downloadLink: `/uploads/${fileName}`,
         uploadedOn: new Date().toISOString(),
         author: formData.author,
-        version: latestVersion?.version,
+        version: newVersion,
         remark: formData.remark,
       };
 
       onFileUpdate(fileData);
-      toast({ title: "New Version Created", description: `${fileName} v${latestVersion?.version} saved successfully` });
+      toast({ title: "New Version Created", description: `${fileName} v${newVersion} saved successfully` });
       resetForm();
       navigate("/");
-
     } catch (err) {
       toast({
         title: "Error",
@@ -158,26 +175,23 @@ console.log(latestVersion);
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Check if file type matches original for non-docx files
     if (!isDocxFile) {
-      const originalExt = fileName.split('.').pop()?.toLowerCase();
-      const selectedExt = file.name.split('.').pop()?.toLowerCase();
-      
+      const originalExt = fileName.split(".").pop()?.toLowerCase();
+      const selectedExt = file.name.split(".").pop()?.toLowerCase();
       if (originalExt !== selectedExt) {
-        toast({ 
-          title: "Error", 
-          description: `Please upload a ${originalExt?.toUpperCase()} file to match the original format`, 
-          variant: "destructive" 
+        toast({
+          title: "Error",
+          description: `Please upload a ${originalExt?.toUpperCase()} file to match the original format`,
+          variant: "destructive",
         });
         return;
       }
     } else {
-      // For docx files, only allow docx uploads
       if (!file.type.includes("wordprocessingml.document")) {
-        toast({ 
-          title: "Error", 
-          description: "Please upload a Word document (.docx) file", 
-          variant: "destructive" 
+        toast({
+          title: "Error",
+          description: "Please upload a Word document (.docx) file",
+          variant: "destructive",
         });
         return;
       }
@@ -189,12 +203,15 @@ console.log(latestVersion);
   const handleSubmitUpload = async () => {
     if (!selectedFile || !validateForm()) return;
 
+    const newVersion = latestVersion?.version
+      ? (Math.floor(parseFloat(latestVersion.version)) + 1).toFixed(1)
+      : "2.0";
 
     const uploadForm = new FormData();
-    uploadForm.append("file", selectedFile);
+    uploadForm.append("file", selectedFile, fileName);
     uploadForm.append("author", formData.author);
     uploadForm.append("remark", formData.remark);
-    uploadForm.append("version", latestVersion?.version);
+    uploadForm.append("version", newVersion);
     uploadForm.append("filename", fileName.replace(/\.[^/.]+$/, ""));
     uploadForm.append("keywords", formData.keywords);
 
@@ -204,15 +221,15 @@ console.log(latestVersion);
       const fileData = {
         fileName,
         keywords: formData.keywords,
-        downloadLink: `/uploads/${selectedFile.name}`,
+        downloadLink: `/uploads/${fileName}`,
         uploadedOn: new Date().toISOString(),
         author: formData.author,
-        version: latestVersion?.version,
+        version: newVersion,
         remark: formData.remark,
       };
 
       onFileUpdate(fileData);
-      toast({ title: "File Updated", description: `${fileName} v${latestVersion?.version} uploaded successfully` });
+      toast({ title: "File Updated", description: `${fileName} v${newVersion} uploaded successfully` });
       resetForm();
     } catch (err) {
       toast({
@@ -235,7 +252,7 @@ console.log(latestVersion);
 
   const getAcceptedFileTypes = () => {
     if (isDocxFile) return ".docx";
-    const ext = fileName.split('.').pop()?.toLowerCase();
+    const ext = fileName.split(".").pop()?.toLowerCase();
     return `.${ext}`;
   };
 
@@ -243,11 +260,7 @@ console.log(latestVersion);
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      {children && (
-        <DialogTrigger asChild>
-          {children}
-        </DialogTrigger>
-      )}
+      {children && <DialogTrigger asChild>{children}</DialogTrigger>}
 
       <DialogContent className={`${showEditor ? "sm:max-w-6xl max-h-[90vh]" : "sm:max-w-2xl"} bg-card/95 backdrop-blur-sm border-border shadow-file-card-hover`}>
         <DialogHeader className="pb-4 border-b border-border/50">
@@ -255,17 +268,14 @@ console.log(latestVersion);
             {showEditor ? `Editing - ${fileName}` : `Edit ${fileName}`}
           </DialogTitle>
           <p className="text-sm text-muted-foreground">
-            Current version: {latestVersion?.version || "1.0"} • Type: {fileType.toUpperCase()}
+            Current version: {latestVersion?.version || "1"} • Type: {fileType.toUpperCase()}
           </p>
         </DialogHeader>
 
         {showEditor ? (
           <div className="flex flex-col h-full">
             <div className="flex-1 p-4 bg-muted/30 rounded-xl border border-border/50">
-              <div 
-                ref={quillRef} 
-                className="h-[600px] bg-background rounded-lg border border-border shadow-inner"
-              />
+              <div ref={quillRef} className="h-[600px] bg-background rounded-lg border border-border shadow-inner" />
             </div>
             <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-border/50">
               <Button variant="outline" onClick={resetForm} className="min-w-20">
@@ -278,11 +288,7 @@ console.log(latestVersion);
           </div>
         ) : (
           <div className="space-y-6">
-            <Tabs 
-              value={activeTab} 
-              onValueChange={setActiveTab} 
-              className="w-full"
-            >
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               {showCreateOption && (
                 <TabsList className="grid w-full grid-cols-2 bg-muted/30 p-1 h-12">
                   <TabsTrigger value="create" className="h-10 data-[state=active]:bg-gradient-primary data-[state=active]:text-primary-foreground">
@@ -300,8 +306,8 @@ console.log(latestVersion);
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label className="text-sm font-medium text-card-foreground">Author *</Label>
-                    <Input 
-                      value={formData.author} 
+                    <Input
+                      value={formData.author}
                       onChange={(e) => handleInputChange("author", e.target.value)}
                       placeholder="Enter author name"
                       className="h-10 bg-background/50 border-border focus:border-primary"
@@ -309,8 +315,8 @@ console.log(latestVersion);
                   </div>
                   <div className="space-y-2">
                     <Label className="text-sm font-medium text-card-foreground">Keywords</Label>
-                    <Input 
-                      value={formData.keywords} 
+                    <Input
+                      value={formData.keywords}
                       onChange={(e) => handleInputChange("keywords", e.target.value)}
                       placeholder="Enter keywords separated by commas"
                       className="h-10 bg-background/50 border-border focus:border-primary"
@@ -319,8 +325,8 @@ console.log(latestVersion);
                 </div>
                 <div className="space-y-2">
                   <Label className="text-sm font-medium text-card-foreground">Remark</Label>
-                  <Textarea 
-                    value={formData.remark} 
+                  <Textarea
+                    value={formData.remark}
                     onChange={(e) => handleInputChange("remark", e.target.value)}
                     placeholder="Add any remarks or notes about this version"
                     className="min-h-20 bg-background/50 border-border focus:border-primary resize-none"
@@ -338,7 +344,7 @@ console.log(latestVersion);
                       <div>
                         <p className="font-medium text-card-foreground">Create New Version</p>
                         <p className="text-sm text-muted-foreground">
-                          Opens editor with content from version {latestVersion?.version || "1.0"}
+                          Opens editor with content from version {latestVersion?.version || "1"}
                         </p>
                       </div>
                     </div>
@@ -359,33 +365,25 @@ console.log(latestVersion);
                   <div className="text-center space-y-3">
                     <Upload className="mx-auto h-12 w-12 text-muted-foreground" />
                     <div>
-                      <Input 
-                        type="file" 
-                        ref={fileInputRef} 
-                        onChange={handleFileSelect} 
+                      <Input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileSelect}
                         accept={getAcceptedFileTypes()}
                         className="sr-only"
                         id="file-upload-edit"
                       />
-                      <Label 
-                        htmlFor="file-upload-edit" 
-                        className="cursor-pointer text-primary hover:text-primary-hover font-medium"
-                      >
+                      <Label htmlFor="file-upload-edit" className="cursor-pointer text-primary hover:text-primary-hover font-medium">
                         Click to browse files
                       </Label>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        or drag and drop your file here
-                      </p>
+                      <p className="text-sm text-muted-foreground mt-1">or drag and drop your file here</p>
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      {isDocxFile 
-                        ? "Only .docx files are accepted" 
-                        : `Only ${fileType.toUpperCase()} files are accepted to match the original format`
-                      }
+                      {isDocxFile ? "Only .docx files are accepted" : `Only ${fileType.toUpperCase()} files are accepted to match the original format`}
                     </p>
                   </div>
                 </div>
-                
+
                 {selectedFile && (
                   <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg">
                     <div className="flex items-center gap-3">
@@ -394,14 +392,12 @@ console.log(latestVersion);
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-card-foreground truncate">{selectedFile.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-                        </p>
+                        <p className="text-sm text-muted-foreground">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
                       </div>
                     </div>
                   </div>
                 )}
-                
+
                 <div className="flex justify-end gap-3 pt-4 border-t border-border/50">
                   <Button variant="outline" onClick={() => setIsOpen(false)} className="min-w-20">
                     Cancel
